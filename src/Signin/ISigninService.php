@@ -1,0 +1,22 @@
+<?php
+
+namespace Larapress\Auth\Signin;
+
+use Illuminate\Http\Request;
+use Larapress\Auth\Signin\SigninRequest;
+
+interface ISigninService
+{
+    /**
+     * @param SigninRequest $request
+     * @param string $guard
+     * @return \Larapress\Auth\Signin\SigninResponse
+     * @throws \Larapress\Core\Exceptions\AppException
+     */
+    public function signin(SigninRequest $request);
+
+    /**
+     * @return array
+     */
+    public function logout();
+}
