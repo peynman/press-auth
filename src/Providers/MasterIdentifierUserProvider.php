@@ -5,7 +5,9 @@ namespace Larapress\Auth\Providers;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Larapress\Profiles\Flags\UserDomainFlags;
 use Larapress\Profiles\Models\Domain;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 
@@ -95,28 +97,18 @@ class MasterIdentifierUserProvider implements UserProvider
         }
 
 		$domain = $this->domainRepository->getCurrentRequestDomain();
-		$domain_ids = null;
-		if (!is_null($domain)) {
-			/** @var \Larapress\Profiles\IProfileUser[] $master_aff */
-			$affiliates = $domain->users()->whereHas('roles', function(Builder $q) {
-				$q->whereIn('name', config('larapress.profiles.security.roles.affiliate'));
-			})->get();
-
-			$domain_ids = [];
-			foreach ($affiliates as $affiliate) {
-                $domain_ids = array_merge($domain_ids, $affiliate->getAffiliateDomainIds());
-            }
-		}
-
-		if (!is_null($domain_ids)) {
-            $query->whereHas('domains', function(Builder $q) use($domain_ids) {
-                $q->whereIn('id', $domain_ids);
+        $query->where(function($q) use($domain) {
+            $q->orWhereHas('domains', function(Builder $q) use($domain) {
+                $q->where('id', $domain->id)->where('user_domain.flags', '&', UserDomainFlags::REGISTRATION_DOMAIN);
+            })->orWhereHas('roles', function($q) {
+                $q->whereIn('name', config('larapress.profiles.security.roles.super-role'));
             });
-        }
+        });
 
 		if (!is_null($query)) {
 			$user = $query->first();
-		}
+        }
+
 
 		return $user;
 	}

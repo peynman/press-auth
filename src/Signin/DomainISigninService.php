@@ -2,10 +2,13 @@
 
 namespace Larapress\Auth\Signin;
 
+use Exception;
 use Illuminate\Auth\SessionGuard;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Larapress\Core\Exceptions\AppException;
-use Larapress\Profiles\Models\Domain;
+use Larapress\CRUD\Exceptions\AppException;
+use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 
 class DomainISigninService implements ISigninService
@@ -38,17 +41,18 @@ class DomainISigninService implements ISigninService
         foreach ($guards as $guardName => $guardParams) {
             /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
             $guard = Auth::guard($guardName);
-            $token = $guard->attempt($request->getCredentials(), true);
-            if ($guard instanceof SessionGuard) {
-                $token = [
-                    'remember' => $guard->getRecallerName(),
-                    'session' => $request->getSession()->getName(),
-                ];
-            }
-
-            if (!is_null($token)) {
-                $guards[$guardName] = $token;
-                $success = true;
+            $token = $guard->attempt($request->getCredentials(), $request->get('remember', false));
+            if ($token !== false) {
+                if ($guard instanceof SessionGuard) {
+                    $token = [
+                        'remember' => $guard->getRecallerName(),
+                        'session' => $request->getSession()->getName(),
+                    ];
+                }
+                if (!is_null($token)) {
+                    $guards[$guardName] = $token;
+                    $success = true;
+                }
             }
         }
         if ($success) {
@@ -60,14 +64,49 @@ class DomainISigninService implements ISigninService
             ));
 
             return [
-                'success' => $success,
                 'tokens' => $guards,
                 'user' => $user,
-                'message' => trans(config('larapress.auth.theme.translations.namespace').'::larapress.auth.signin.success')
+                'message' => trans('larapress::auth.signin.success')
             ];
         }
 
-        throw new AppException(AppException::ERR_INVALID_CREDENTIALS );
+        throw new AppException (AppException::ERR_INVALID_CREDENTIALS );
+    }
+
+
+    /**
+     * @return \Larapress\Auth\Signin\SigninResponse
+     * @throws \Larapress\Core\Exceptions\AppException
+     */
+    public function signinUser(Authenticatable $user) {
+        $guards = config('auth.guards');
+        $request = Request::createFromGlobals();
+        foreach ($guards as $guardName => $guardParams) {
+            /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
+            $guard = Auth::guard($guardName);
+            $token = $guard->login($user);
+            if ($token !== false) {
+                if ($guard instanceof SessionGuard) {
+                    $session = $request->getSession();
+                    if (!is_null($session)) {
+                        $session = $session->getName();
+                    }
+                    $token = [
+                        'remember' => $guard->getRecallerName(),
+                        'session' => $session,
+                    ];
+                }
+                if (!is_null($token)) {
+                    $guards[$guardName] = $token;
+                }
+            }
+        }
+
+        return [
+            'tokens' => $guards,
+            'user' => $user,
+            'message' => trans('larapress::auth.signin.success')
+        ];
     }
 
     /**
@@ -79,7 +118,9 @@ class DomainISigninService implements ISigninService
         foreach ($guards as $guardName => $guardParams) {
             /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
             $guard = Auth::guard($guardName);
-            $guard->logout();
+            try {
+                $guard->logout();
+            } catch (Exception $e) {}
         }
 
         return [

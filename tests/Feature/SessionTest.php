@@ -19,7 +19,7 @@ class SessionTest extends Orchestra\Testbench\TestCase
      */
     protected function getPackageProviders($app)
     {
-        return ['Larapress\Core\Providers\PackageServiceProvider'];
+        return ['Larapress\Auth\Providers\PackageServiceProvider'];
     }
 
     /**

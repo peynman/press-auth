@@ -2,8 +2,10 @@
 
 namespace Larapress\Auth\Signin;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Larapress\Auth\Signin\SigninRequest;
+use Larapress\Profiles\IProfileUser;
 
 interface ISigninService
 {
@@ -14,6 +16,13 @@ interface ISigninService
      * @throws \Larapress\Core\Exceptions\AppException
      */
     public function signin(SigninRequest $request);
+
+
+    /**
+     * @return \Larapress\Auth\Signin\SigninResponse
+     * @throws \Larapress\Core\Exceptions\AppException
+     */
+    public function signinUser(Authenticatable $user);
 
     /**
      * @return array

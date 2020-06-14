@@ -2,6 +2,7 @@
 
 namespace Larapress\Auth\Signin;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 
@@ -9,10 +10,10 @@ class SigninController extends Controller
 {
     public static function registerRoutes() {
         Route::post('signin', '\\'.self::class.'@signin')
-            ->name('user.any.signin');
+            ->name('users.any.signin');
 
-        Route::post('logout', '\\'.self::class.'@logout')
-            ->name('user.any.logout');
+        Route::any('logout', '\\'.self::class.'@logout')
+            ->name('users.any.logout');
     }
 
     /**
@@ -29,7 +30,7 @@ class SigninController extends Controller
      * @param ISigninService $service
      * @return \Illuminate\Http\Response
      */
-    public function logout(ISigninService $service) {
+    public function logout(ISigninService $service, Request $request) {
         return response()->json($service->logout());
     }
 }

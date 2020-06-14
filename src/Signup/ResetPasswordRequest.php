@@ -4,7 +4,7 @@ namespace Larapress\Auth\Signup;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SignupRequest extends FormRequest
+class ResetPasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +25,7 @@ class SignupRequest extends FormRequest
     public function rules()
     {
         return [
-            'phone' => 'required|numeric|exists:phone_numbers,number',
-            'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z]+)(\d+)?$)/u',
+            'phone' => 'required|numeric|',
             'password' => 'string|min:6|confirmed|required',
             'msg_id' => 'required|numeric|exists:sms_messages,id',
         ];
@@ -40,15 +39,6 @@ class SignupRequest extends FormRequest
      */
     public function getPhone() {
         return $this->get('phone');
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @return String
-     */
-    public function getUsername() {
-        return $this->get('username');
     }
 
     /**

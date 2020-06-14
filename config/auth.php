@@ -20,17 +20,13 @@ return [
     'prefix' => 'api',
 
     'signup' => [
-        'form' => 'signup_form',
-        'number' => 'optional',
-        'email' => 'optional'
-    ],
-
-    'signin' => [
-        'social' => [
-            'google',
-            'facebook',
-            'tweeter',
-            'linkedin'
+        'sms' => [
+            'from' => 'Signup Service',
+            'numbers_only' => true,
+            'code_len' => 6,
+            'default-author' => 1,
         ],
+
+        'default-role' => 3,
     ],
 ];

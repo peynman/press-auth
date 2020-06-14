@@ -31,10 +31,9 @@
     "php": "^7.2",
     "laravel/framework": "^6.2",
     "tymon/jwt-auth": "1.0.0-rc.5",
-    "peynman/larapress-crud": "master",
-    "peynman/larapress-crud-render": "master",
-    "peynman/larapress-pages": "master",
-    "peynman/larapress-profiles": "master"
+    "peynman/larapress-profiles": "master",
+    "peynman/larapress-reports": "master",
+    "peynman/larapress-notifications": "master"
   },
   "require-dev": {
     "facade/ignition": "^1.4",

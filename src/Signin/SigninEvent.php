@@ -2,25 +2,21 @@
 
 namespace Larapress\Auth\Signin;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Larapress\CRUD\ICRUDUser;
-use Larapress\Profiles\IProfileUser;
 
 class SigninEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $user;
+    /** @var \Larapress\Profiles\IProfileUser */
+    public $user;
     /** @var \Larapress\Profiles\Models\Domain */
-    private $domain;
+    public $domain;
     /** @var string */
-    private $ip;
+    public $ip;
 
     /**
      * Create a new event instance.
