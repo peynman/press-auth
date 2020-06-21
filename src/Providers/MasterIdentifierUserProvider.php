@@ -83,18 +83,17 @@ class MasterIdentifierUserProvider implements UserProvider
 		$query = null;
 		$user = null;
 
-		$userClass = config('larapress.crud.user.class');
-		if (isset($credentials['username'])) {
-			$query = $userClass::where('name', $credentials['username']);
-		} else if (isset($credentials['phone'])) {
-			return $userClass::whereHas('phones', function(Builder $q) use($credentials) {
-				$q->where('number', $credentials['phone']);
-			});
-		} else if (isset($credentials['email'])) {
-            return $userClass::whereHas('emails', function(Builder $q) use($credentials) {
-                $q->where('email', $credentials['email']);
+        $userClass = config('larapress.crud.user.class');
+        $query = $userClass::where(function ($q) use($credentials) {
+            $q->orWhere('name', $credentials['username']);
+            $q->orWhereHas('phones', function(Builder $q) use($credentials) {
+                $q->where('number', $credentials['username']);
             });
-        }
+            $q->orWhereHas('emails', function(Builder $q) use($credentials) {
+                $q->where('email', $credentials['username']);
+            });
+        });
+
 
 		$domain = $this->domainRepository->getCurrentRequestDomain();
         $query->where(function($q) use($domain) {
