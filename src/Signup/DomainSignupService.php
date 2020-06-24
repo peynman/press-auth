@@ -7,13 +7,20 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Larapress\Auth\Signin\ISigninService;
+use Larapress\CRUD\BaseFlags;
+use Larapress\CRUD\Events\CRUDCreated;
+use Larapress\CRUD\Events\CRUDUpdated;
 use Larapress\CRUD\Exceptions\AppException;
 use Larapress\CRUD\Extend\Helpers;
 use Larapress\CRUD\Models\Role;
+use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
 use Larapress\Notifications\Models\SMSMessage;
 use Larapress\Notifications\SMSService\ISMSService;
 use Larapress\Notifications\SMSService\Jobs\SendSMS;
+use Larapress\Profiles\CRUD\PhoneNumberCRUDProvider;
+use Larapress\Profiles\CRUD\UserCRUDProvider;
 use Larapress\Profiles\Flags\UserDomainFlags;
 use Larapress\Profiles\Models\PhoneNumber;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
@@ -45,18 +52,18 @@ class DomainSignupService implements ISignupService
 
         // reject if there is no phone number record as verified
         if (is_null($dbPhone)) {
-            throw new Exception("Number is not verified");
+            throw new Exception(trans('auth.phone_expired'));
         }
 
         // reject if phone number has already a user
         if (!is_null($dbPhone->user_id)) {
-            throw new Exception("Number is not available, reset password");
+            throw new Exception(trans('auth.already_exists_reset_pass'));
         }
 
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
         if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified' || Carbon::now()->diffInMinutes($smsMessage->updated_at) > 5) {
-            throw new Exception("Number is not verified");
+            throw new Exception(trans('auth.phone_expired'));
         }
 
         return DB::transaction(function () use ($dbPhone, $smsMessage, $domain, $username, $password) {
@@ -81,9 +88,13 @@ class DomainSignupService implements ISignupService
                 'flags' => UserDomainFlags::REGISTRATION_DOMAIN | UserDomainFlags::MEMBERSHIP_DOMAIN,
             ]);
 
+            $now = Carbon::now();
+            CRUDCreated::dispatch($user, UserCRUDProvider::class, $now);
+            CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
+
             /** @var ISigninService */
             $signinService = app()->make(ISigninService::class);
-            return $signinService->signinUser($user);
+            return $signinService->signinUser($username, $password);
         });
 
     }
@@ -110,13 +121,13 @@ class DomainSignupService implements ISignupService
 
         // reject if there is no phone number record as verified
         if (is_null($dbPhone)) {
-            throw new Exception("Number is not verified");
+            throw new Exception(trans('auth.phone_expired'));
         }
 
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
         if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified' || Carbon::now()->diffInMinutes($smsMessage->updated_at) > 5) {
-            throw new Exception("Number is not verified");
+            throw new Exception(trans('auth.phone_expired'));
         }
 
         // update & reset password
@@ -132,7 +143,7 @@ class DomainSignupService implements ISignupService
 
         /** @var ISigninService */
         $signinService = app()->make(ISigninService::class);
-        return $signinService->signinUser($dbPhone->user);
+        return $signinService->signinUser($dbPhone->user->name, $password);
     }
 
     /**
@@ -154,7 +165,7 @@ class DomainSignupService implements ISignupService
             throw new Exception(trans('larapress::auth.exceptions.no_gateway'));
         }
 
-        if (config('larapress.auth.sms.numbers_only')) {
+        if (config('larapress.auth.signup.sms.numbers_only', true)) {
             $verify_code = Helpers::randomNumbers(config('larapress.auth.signup.sms.code_len', 5));
         } else {
             $verify_code = Helpers::randomString(config('larapress.auth.signup.sms.code_len', 5));
@@ -168,13 +179,37 @@ class DomainSignupService implements ISignupService
             'to' => $phone,
             'message' => $message,
             'flags' => SMSMessage::FLAGS_VERIFICATION_MESSAGE,
+            'status' => SMSMessage::STATUS_CREATED,
             'data' => [
                 'mode' => 'verify',
                 'code' => $verify_code,
                 'domain' => $domain,
             ]
         ]);
-        // event(new SendSMS($smsMessage));
+
+        /** @var IDomainRepository */
+        $domainRepo = app()->make(IDomainRepository::class);
+        $currDomain = $domainRepo->getCurrentRequestDomain();
+
+        /** @var IDomainRepository */
+        $domainRepo = app()->make(IDomainRepository::class);
+        $currDomain = $domainRepo->getCurrentRequestDomain();
+        $dbPhone = PhoneNumber::where('number', $phone)
+            ->where('domain_id', $currDomain->id)
+            ->first();
+
+        $now = Carbon::now();
+        if (is_null($dbPhone)) {
+            $dbPhone = PhoneNumber::create([
+                'number' => $phone,
+                'user_id' => null,
+                'domain_id' => $currDomain->id,
+                'flags' => 0,
+            ]);
+            CRUDCreated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
+        }
+        CRUDCreated::dispatch($smsMessage, SMSMessageCRUDProvider::class, $now);
+        SendSMS::dispatch($smsMessage);
 
         return [
             'message' => trans('larapress::auth.signup.messages.code_sent'),
@@ -209,6 +244,7 @@ class DomainSignupService implements ISignupService
             $smsMessage->update([
                 'data' => $data
             ]);
+            CRUDUpdated::dispatch($smsMessage, SMSMessageCRUDProvider::class, Carbon::now());
         }
 
         return [
@@ -245,6 +281,11 @@ class DomainSignupService implements ISignupService
                         'domain_id' => $currDomain->id,
                         'flags' => PhoneNumber::FLAGS_VERIFIED,
                     ]);
+                } else if (!BaseFlags::isActive($dbPhone->flags, PhoneNumber::FLAGS_VERIFIED)) {
+                    $dbPhone->update([
+                        'flags' => PhoneNumber::FLAGS_VERIFIED,
+                    ]);
+                    CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, Carbon::now());
                 }
 
                 return $valid;

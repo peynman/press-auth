@@ -38,4 +38,12 @@ class SigninRequest extends FormRequest
             'password' => $this->request->get('password')
         ];
     }
+
+    public function getUsername() {
+        return $this->request->get('username');
+    }
+
+    public function getPassword() {
+        return $this->request->get('password');
+    }
 }

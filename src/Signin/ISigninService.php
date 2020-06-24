@@ -22,7 +22,7 @@ interface ISigninService
      * @return \Larapress\Auth\Signin\SigninResponse
      * @throws \Larapress\Core\Exceptions\AppException
      */
-    public function signinUser(Authenticatable $user);
+    public function signinUser(string $username, String $password);
 
     /**
      * @return array

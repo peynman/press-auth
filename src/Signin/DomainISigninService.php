@@ -7,6 +7,8 @@ use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Log;
 use Larapress\CRUD\Exceptions\AppException;
 use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
@@ -23,8 +25,7 @@ class DomainISigninService implements ISigninService
      *
      * @param \Larapress\Profiles\Repository\Domain\IDomainRepository $domainRepository
      */
-    public function __construct(IDomainRepository $domainRepository)
-    {
+    public function __construct(IDomainRepository $domainRepository) {
         $this->domainRepository = $domainRepository;
     }
 
@@ -35,56 +36,23 @@ class DomainISigninService implements ISigninService
      */
     public function signin(SigninRequest $request)
     {
-        $guards = config('auth.guards');
-        $success = false;
-
-        foreach ($guards as $guardName => $guardParams) {
-            /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
-            $guard = Auth::guard($guardName);
-            $token = $guard->attempt($request->getCredentials(), $request->get('remember', false));
-            if ($token !== false) {
-                if ($guard instanceof SessionGuard) {
-                    $token = [
-                        'remember' => $guard->getRecallerName(),
-                        'session' => $request->getSession()->getName(),
-                    ];
-                }
-                if (!is_null($token)) {
-                    $guards[$guardName] = $token;
-                    $success = true;
-                }
-            }
-        }
-        if ($success) {
-            $user =  Auth::user();
-            event(new SigninEvent(
-                $user,
-                $this->domainRepository->getRequestDomain($request),
-                $request->getClientIp()
-            ));
-
-            return [
-                'tokens' => $guards,
-                'user' => $user,
-                'message' => trans('larapress::auth.signin.success')
-            ];
-        }
-
-        throw new AppException (AppException::ERR_INVALID_CREDENTIALS );
+        return $this->signinUser($request->getUsername(), $request->getPassword());
     }
-
 
     /**
      * @return \Larapress\Auth\Signin\SigninResponse
      * @throws \Larapress\Core\Exceptions\AppException
      */
-    public function signinUser(Authenticatable $user) {
+    public function signinUser(string $username, string $password) {
         $guards = config('auth.guards');
         $request = Request::createFromGlobals();
         foreach ($guards as $guardName => $guardParams) {
             /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
             $guard = Auth::guard($guardName);
-            $token = $guard->login($user);
+            $token = $guard->attempt([
+                'username' => $username,
+                'password' => $password
+            ], true);
             if ($token !== false) {
                 if ($guard instanceof SessionGuard) {
                     $session = $request->getSession();
@@ -101,6 +69,12 @@ class DomainISigninService implements ISigninService
                 }
             }
         }
+        $user =  Auth::user();
+
+        /** @var IDdomainRepository */
+        $domainRepo = app()->make(IDomainRepository::class);
+        $domain = $domainRepo->getCurrentRequestDomain();
+        SigninEvent::dispatch($user, $domain, $request->ip());
 
         return [
             'tokens' => $guards,
