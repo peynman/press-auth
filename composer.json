@@ -28,9 +28,9 @@
     }
   },
   "require": {
-    "php": "^7.2",
-    "laravel/framework": "^6.2",
-    "tymon/jwt-auth": "1.0.0-rc.5",
+    "php": "^7.2.5",
+    "laravel/framework": "^7.0",
+    "tymon/jwt-auth": "1.0.0",
     "peynman/larapress-profiles": "master",
     "peynman/larapress-reports": "master",
     "peynman/larapress-notifications": "master"
