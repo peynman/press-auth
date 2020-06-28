@@ -170,7 +170,7 @@ class DomainSignupService implements ISignupService
         } else {
             $verify_code = Helpers::randomString(config('larapress.auth.signup.sms.code_len', 5));
         }
-        $message = trans('larapress::auth.signup.sms.verify', ['code' => $verify_code]);
+        $message = $verify_code; //trans('larapress::auth.signup.sms.verify', ['code' => );
 
         $smsMessage = SMSMessage::create([
             'author_id' => config('larapress.auth.signup.sms.default-author'),
