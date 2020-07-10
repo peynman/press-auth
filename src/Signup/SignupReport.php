@@ -1,13 +1,13 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Signup;
 
-use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Larapress\CRUD\Base\IReportSource;
-use Larapress\Reports\Services\BaseReportSource;
 use Larapress\Reports\Services\IReportsService;
+use Larapress\Reports\Services\BaseReportSource;
 
-class SigninReport implements IReportSource
+class SignupReport implements IReportSource
 {
     use BaseReportSource;
 
@@ -21,10 +21,10 @@ class SigninReport implements IReportSource
     {
         $this->reports = $reports;
         $this->avReports = [
-            'users.signin.total' => function ($user, array $options = []) {
+            'users.signup.total' => function ($user, array $options = []) {
                 [$filters, $fromC, $toC, $groups] = $this->getCommonReportProps($user, $options);
                 return $this->reports->queryMeasurement(
-                    'user.signin',
+                    'user.signup',
                     $filters,
                     $groups,
                     array_merge(["_value"], $groups),
@@ -33,11 +33,11 @@ class SigninReport implements IReportSource
                     'count()'
                 );
             },
-            'users.signin.windowed' => function ($user, array $options = []) {
+            'users.signup.windowed' => function ($user, array $options = []) {
                 [$filters, $fromC, $toC, $groups] = $this->getCommonReportProps($user, $options);
                 $window = isset($options['window']) ? $options['window'] : '1h';
                 return $this->reports->queryMeasurement(
-                    'user.signin',
+                    'user.signup',
                     $filters,
                     $groups,
                     array_merge(["_value", "_time"], $groups),
@@ -49,12 +49,17 @@ class SigninReport implements IReportSource
         ];
     }
 
-    public function handle(SigninEvent $event)
+    /**
+     * push the event to timeserieas database
+     *
+     * @param SignupEvent $event
+     * @return void
+     */
+    public function handle(SignupEvent $event)
     {
         $tags = [
             'domain' => $event->domain->id,
         ];
-        Log::debug('reporting', $tags);
-        $this->reports->pushMeasurement('user.signin', 1, $tags, [], $event->timestamp);
+        $this->reports->pushMeasurement('user.signup', 1, $tags, [], $event->timestamp);
     }
 }

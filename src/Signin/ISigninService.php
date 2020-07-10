@@ -28,4 +28,14 @@ interface ISigninService
      * @return array
      */
     public function logout();
+
+    /**
+     * Undocumented function
+     *
+     * @param IProfileUser|ICRUDUser $user
+     * @param string $old
+     * @param string $new
+     * @return void
+     */
+    public function updatePassword($user, string $old, string $new);
 }

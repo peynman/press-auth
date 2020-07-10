@@ -5,6 +5,7 @@ namespace Larapress\Auth\Signup;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -62,7 +63,7 @@ class DomainSignupService implements ISignupService
 
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
-        if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified' || Carbon::now()->diffInMinutes($smsMessage->updated_at) > 5) {
+        if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified' ) {
             throw new Exception(trans('auth.phone_expired'));
         }
 
@@ -83,7 +84,9 @@ class DomainSignupService implements ISignupService
             $dbPhone->update([
                 'user_id' => $user->id,
             ]);
-            $user->roles()->attach(Role::find('larapress.auth.signup.default-role'));
+
+            $role = Role::find(config('larapress.auth.signup.default-role'));
+            $user->roles()->attach($role);
             $user->domains()->attach($domain, [
                 'flags' => UserDomainFlags::REGISTRATION_DOMAIN | UserDomainFlags::MEMBERSHIP_DOMAIN,
             ]);
@@ -91,6 +94,8 @@ class DomainSignupService implements ISignupService
             $now = Carbon::now();
             CRUDCreated::dispatch($user, UserCRUDProvider::class, $now);
             CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
+            $req = Request::createFromGlobals();
+            SignupEvent::dispatch($user, $domain, $req->ip(), time());
 
             /** @var ISigninService */
             $signinService = app()->make(ISigninService::class);

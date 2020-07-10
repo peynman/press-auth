@@ -1,12 +1,12 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Signup;
 
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SigninEvent implements ShouldQueue
+class SignupEvent implements ShouldQueue
 {
     use Dispatchable, SerializesModels;
 

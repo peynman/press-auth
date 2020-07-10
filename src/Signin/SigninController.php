@@ -16,6 +16,12 @@ class SigninController extends Controller
             ->name('users.any.logout');
     }
 
+    public static function registerPublicWebRoutes() {
+        Route::any('logout', function (ISigninService $service) {
+            $service->logout();
+            return redirect('/');
+        });
+    }
     /**
      * @param ISigninService $service
      * @param \Larapress\Auth\Signin\SigninRequest $request

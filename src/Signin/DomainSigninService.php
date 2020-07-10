@@ -8,12 +8,15 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Larapress\CRUD\BaseFlags;
 use Larapress\CRUD\Exceptions\AppException;
+use Larapress\Profiles\Flags\UserFlags;
 use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 
-class DomainISigninService implements ISigninService
+class DomainSigninService implements ISigninService
 {
     /**
      * @var \Larapress\Profiles\Repository\Domain\IDomainRepository
@@ -21,11 +24,12 @@ class DomainISigninService implements ISigninService
     private $domainRepository;
 
     /**
-     * DomainISigninService constructor.
+     * DomainSigninService constructor.
      *
      * @param \Larapress\Profiles\Repository\Domain\IDomainRepository $domainRepository
      */
-    public function __construct(IDomainRepository $domainRepository) {
+    public function __construct(IDomainRepository $domainRepository)
+    {
         $this->domainRepository = $domainRepository;
     }
 
@@ -43,7 +47,8 @@ class DomainISigninService implements ISigninService
      * @return \Larapress\Auth\Signin\SigninResponse
      * @throws \Larapress\Core\Exceptions\AppException
      */
-    public function signinUser(string $username, string $password) {
+    public function signinUser(string $username, string $password)
+    {
         $guards = config('auth.guards');
         $request = Request::createFromGlobals();
         foreach ($guards as $guardName => $guardParams) {
@@ -51,7 +56,7 @@ class DomainISigninService implements ISigninService
             $guard = Auth::guard($guardName);
             $token = $guard->attempt([
                 'username' => $username,
-                'password' => $password
+                'password' => $password,
             ], true);
             if ($token !== false) {
                 if ($guard instanceof SessionGuard) {
@@ -67,14 +72,22 @@ class DomainISigninService implements ISigninService
                 if (!is_null($token)) {
                     $guards[$guardName] = $token;
                 }
+            } else {
+                throw new AppException(AppException::ERR_INVALID_CREDENTIALS);
             }
         }
         $user =  Auth::user();
 
-        /** @var IDdomainRepository */
-        $domainRepo = app()->make(IDomainRepository::class);
-        $domain = $domainRepo->getCurrentRequestDomain();
-        SigninEvent::dispatch($user, $domain, $request->ip());
+        if (!is_null($user)) {
+            if (BaseFlags::isActive($user->flags, UserFlags::BANNED)) {
+                throw new AppException(AppException::ERR_ACCESS_BANNED);
+            }
+
+            /** @var IDdomainRepository */
+            $domainRepo = app()->make(IDomainRepository::class);
+            $domain = $domainRepo->getCurrentRequestDomain();
+            SigninEvent::dispatch($user, $domain, $request->ip(), time());
+        }
 
         return [
             'tokens' => $guards,
@@ -94,12 +107,33 @@ class DomainISigninService implements ISigninService
             $guard = Auth::guard($guardName);
             try {
                 $guard->logout();
-            } catch (Exception $e) {}
+            } catch (Exception $e) {
+            }
         }
 
         return [
             'success' => true,
-            'message' => trans(config('larapress.auth.theme.translations.namespace').'::larapress.auth..logout.success')
+            'message' => trans(config('larapress.auth.theme.translations.namespace') . '::larapress.auth..logout.success')
         ];
+    }
+
+
+    /**
+     * Undocumented function
+     *
+     * @param IProfileUser|ICRUDUser $user
+     * @param string $old
+     * @param string $new
+     * @return void
+     */
+    public function updatePassword($user, string $old, string $new)
+    {
+        if (Hash::check($old, $user->password)) {
+            $user->update([
+                'password' => Hash::make($new),
+            ]);
+        } else {
+            throw new AppException(AppException::ERR_INVALID_PARAMS);
+        }
     }
 }
