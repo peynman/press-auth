@@ -3,7 +3,7 @@
 namespace Larapress\Auth\Signup;
 
 use Carbon\Carbon;
-use Larapress\CRUD\Base\IReportSource;
+use Larapress\CRUD\Services\IReportSource;
 use Larapress\Reports\Services\IReportsService;
 use Larapress\Reports\Services\BaseReportSource;
 

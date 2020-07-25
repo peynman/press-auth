@@ -29,7 +29,8 @@ class SigninController extends Controller
      * @throws \Larapress\Core\Exceptions\AppException
      */
     public function signin(ISigninService $service, SigninRequest $request) {
-        return response()->json($service->signin($request));
+        return response()->json(array_merge($service->signin($request), [
+        ]));
     }
 
     /**
