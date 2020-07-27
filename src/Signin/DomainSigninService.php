@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Larapress\CRUD\ServicesFlags;
+use Larapress\CRUD\BaseFlags;
 use Larapress\CRUD\Exceptions\AppException;
 use Larapress\Profiles\Flags\UserFlags;
 use Larapress\Profiles\IProfileUser;
