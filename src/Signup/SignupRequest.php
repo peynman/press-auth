@@ -29,6 +29,7 @@ class SignupRequest extends FormRequest
             'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-]+)(\d+)?$)/u',
             'password' => 'string|min:6|confirmed|required',
             'msg_id' => 'required|numeric|exists:sms_messages,id',
+            'introducer_id' => 'nullable|numeric|exists:users,id',
         ];
     }
 
@@ -67,5 +68,14 @@ class SignupRequest extends FormRequest
      */
     public function getMessageID() {
         return $this->get('msg_id');
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
+    public function getIntroducerID() {
+        return $this->get('introducer_id');
     }
 }

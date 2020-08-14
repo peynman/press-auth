@@ -16,6 +16,7 @@ use Larapress\CRUD\Events\CRUDUpdated;
 use Larapress\CRUD\Exceptions\AppException;
 use Larapress\CRUD\Extend\Helpers;
 use Larapress\CRUD\Models\Role;
+use Larapress\ECommerce\Services\Banking\IBankingService;
 use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
 use Larapress\Notifications\Models\SMSMessage;
 use Larapress\Notifications\SMSService\ISMSService;
@@ -25,18 +26,26 @@ use Larapress\Profiles\CRUD\UserCRUDProvider;
 use Larapress\Profiles\Flags\UserDomainFlags;
 use Larapress\Profiles\Models\PhoneNumber;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
+use Larapress\Profiles\Services\IFormEntryService;
+use Larapress\Profiles\IProfileUser;
 
 class DomainSignupService implements ISignupService
 {
 
+    public function signupUserWithData($dbPhone, $domaiId, $username, $password) {
+
+    }
+
     /**
-     * @param String $phone
-     * @param String $username
-     * @param String $password
+     * @param SignupRequest $request
      * @return array
      */
-    public function signupWithPhoneNumber(string $phone, string $msgId, string $username, string $password)
+    public function signupWithPhoneNumber(SignupRequest $request)
     {
+        $phone = $request->getPhone();
+        $username = $request->getUsername();
+        $password = $request->getPassword();
+        $msgId = $request->getMessageID();
         /** @var IDdomainRepository */
         $domainRepo = app()->make(IDomainRepository::class);
         $domain = $domainRepo->getCurrentRequestDomain();
@@ -56,18 +65,13 @@ class DomainSignupService implements ISignupService
             throw new Exception(trans('auth.phone_expired'));
         }
 
-        // reject if phone number has already a user
-        if (!is_null($dbPhone->user_id)) {
-            throw new Exception(trans('auth.already_exists_reset_pass'));
-        }
-
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
         if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified' ) {
             throw new Exception(trans('auth.phone_expired'));
         }
 
-        return DB::transaction(function () use ($dbPhone, $smsMessage, $domain, $username, $password) {
+        return DB::transaction(function () use ($dbPhone, $smsMessage, $domain, $username, $password, $request) {
             // update & create account
             $data = $smsMessage->data;
             $data['mode'] = 'registered';
@@ -94,8 +98,68 @@ class DomainSignupService implements ISignupService
             $now = Carbon::now();
             CRUDCreated::dispatch($user, UserCRUDProvider::class, $now);
             CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
-            $req = Request::createFromGlobals();
-            SignupEvent::dispatch($user, $domain, $req->ip(), time());
+            SignupEvent::dispatch($user, $domain, $request->ip(), time());
+
+            // add registerar gift based on introducer id
+            if (!is_null($request->getIntroducerID())) {
+                /** @var IFormEntryService */
+                $service = app(IFormEntryService::class);
+                $service->updateUserFormEntryTag(
+                    $request,
+                    $user,
+                    config('larapress.ecommerce.lms.introducer_default_form_id'),
+                    'introducer-id-'.$request->getIntroducerID(),
+                    function ($req, $form, $entry) use($request) {
+                        return [
+                            'introducer_id' => $request->getIntroducerID(),
+
+                        ];
+                    }
+                );
+
+                /** @var IBankingService */
+                $bankService = app(IBankingService::class);
+                $bankService->addBalanceForUser(
+                    $request,
+                    $user,
+                    $domain->id,
+                    config('larapress.ecommerce.lms.introducers.user_gift.amount'),
+                    config('larapress.ecommerce.lms.introducers.user_gift.currency'),
+                    trans('larapress::ecommerce.banking.messages.wallet-descriptions.introducer_gift_wallet_desc', [
+                        'introducer_id' => $request->getIntroducerID()
+                    ])
+                );
+
+                // add to support group if introducer has support role
+                $class = config('larapress.crud.user.class');
+                $introducer = call_user_func([$class ,'find'], $request->getIntroducerID());
+                if ($introducer->hasRole(config('larapress.ecommerce.lms.support_role_id'))) {
+                    $service->updateUserFormEntryTag(
+                        $request,
+                        $user,
+                        config('larapress.ecommerce.lms.support_group_default_form_id'),
+                        'support-group-'.$introducer->id,
+                        function ($request, $inputNames, $form, $entry) use($introducer) {
+                            $values = [
+                                'support_user_id' => is_null($entry) || !isset($entry->data['values']['support_user_id']) ? [$introducer->id] :
+                                    array_merge($entry->data['values']['support_user_id'], [$introducer->id])
+                            ];
+                            return $values;
+                        }
+                    );
+                }
+            } else {
+                /** @var IBankingService */
+                $bankService = app(IBankingService::class);
+                $bankService->addBalanceForUser(
+                    $request,
+                    $user,
+                    $domain->id,
+                    config('larapress.ecommerce.lms.registeration_gift.amount'),
+                    config('larapress.ecommerce.lms.registeration_gift.currency'),
+                    trans('larapress::ecommerce.banking.messages.wallet-descriptions.register_gift_wallet_desc')
+                );
+            }
 
             /** @var ISigninService */
             $signinService = app()->make(ISigninService::class);

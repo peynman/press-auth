@@ -33,7 +33,8 @@
     "tymon/jwt-auth": "1.0.0",
     "peynman/larapress-profiles": "master",
     "peynman/larapress-reports": "master",
-    "peynman/larapress-notifications": "master"
+    "peynman/larapress-notifications": "master",
+    "peynman/larapress-ecommerce": "master"
   },
   "require-dev": {
     "facade/ignition": "^1.4",

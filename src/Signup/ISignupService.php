@@ -7,14 +7,10 @@ interface ISignupService
     /**
      * Undocumented function
      *
-     * @param string $phone
-     * @param string $msgId
-     * @param string $username
-     * @param string $password
+     * @param SignupRequest $request
      * @return array
      */
-    public function signupWithPhoneNumber(string $phone, string $msgId, string $username, string $password);
-
+    public function signupWithPhoneNumber(SignupRequest $service);
 
     /**
      * Undocumented function

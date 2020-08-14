@@ -53,12 +53,7 @@ class SignupController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function registerSMSVerifyCode(ISignupService $service, SignupRequest $request) {
-        return response()->json($service->signupWithPhoneNumber(
-            $request->getPhone(),
-            $request->getMessageID(),
-            $request->getUsername(),
-            $request->getPassword()
-        ));
+        return response()->json($service->signupWithPhoneNumber($request));
     }
 
 
