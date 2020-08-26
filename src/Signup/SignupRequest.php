@@ -25,7 +25,7 @@ class SignupRequest extends FormRequest
     public function rules()
     {
         return [
-            'phone' => 'required|numeric|exists:phone_numbers,number',
+            'phone' => 'required|numeric|exists:phone_numbers,number|digits:11',
             'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-]+)(\d+)?$)/u',
             'password' => 'string|min:6|confirmed|required',
             'msg_id' => 'required|numeric|exists:sms_messages,id',

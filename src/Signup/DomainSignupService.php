@@ -17,10 +17,11 @@ use Larapress\CRUD\Exceptions\AppException;
 use Larapress\CRUD\Extend\Helpers;
 use Larapress\CRUD\Models\Role;
 use Larapress\ECommerce\Services\Banking\IBankingService;
+use Larapress\ECommerce\Services\SupportGroup\ISupportGroupService;
 use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
 use Larapress\Notifications\Models\SMSMessage;
-use Larapress\Notifications\SMSService\ISMSService;
-use Larapress\Notifications\SMSService\Jobs\SendSMS;
+use Larapress\Notifications\Services\SMSService\ISMSService;
+use Larapress\Notifications\Services\SMSService\Jobs\SendSMS;
 use Larapress\Profiles\CRUD\PhoneNumberCRUDProvider;
 use Larapress\Profiles\CRUD\UserCRUDProvider;
 use Larapress\Profiles\Flags\UserDomainFlags;
@@ -28,6 +29,7 @@ use Larapress\Profiles\Models\PhoneNumber;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 use Larapress\Profiles\Services\IFormEntryService;
 use Larapress\Profiles\IProfileUser;
+use Larapress\Profiles\Models\FormEntry;
 
 class DomainSignupService implements ISignupService
 {
@@ -100,66 +102,11 @@ class DomainSignupService implements ISignupService
             CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
             SignupEvent::dispatch($user, $domain, $request->ip(), time());
 
-            // add registerar gift based on introducer id
-            if (!is_null($request->getIntroducerID())) {
-                /** @var IFormEntryService */
-                $service = app(IFormEntryService::class);
-                $service->updateUserFormEntryTag(
-                    $request,
-                    $user,
-                    config('larapress.ecommerce.lms.introducer_default_form_id'),
-                    'introducer-id-'.$request->getIntroducerID(),
-                    function ($req, $form, $entry) use($request) {
-                        return [
-                            'introducer_id' => $request->getIntroducerID(),
-
-                        ];
-                    }
-                );
-
-                /** @var IBankingService */
-                $bankService = app(IBankingService::class);
-                $bankService->addBalanceForUser(
-                    $request,
-                    $user,
-                    $domain->id,
-                    config('larapress.ecommerce.lms.introducers.user_gift.amount'),
-                    config('larapress.ecommerce.lms.introducers.user_gift.currency'),
-                    trans('larapress::ecommerce.banking.messages.wallet-descriptions.introducer_gift_wallet_desc', [
-                        'introducer_id' => $request->getIntroducerID()
-                    ])
-                );
-
-                // add to support group if introducer has support role
-                $class = config('larapress.crud.user.class');
-                $introducer = call_user_func([$class ,'find'], $request->getIntroducerID());
-                if ($introducer->hasRole(config('larapress.ecommerce.lms.support_role_id'))) {
-                    $service->updateUserFormEntryTag(
-                        $request,
-                        $user,
-                        config('larapress.ecommerce.lms.support_group_default_form_id'),
-                        'support-group-'.$introducer->id,
-                        function ($request, $inputNames, $form, $entry) use($introducer) {
-                            $values = [
-                                'support_user_id' => is_null($entry) || !isset($entry->data['values']['support_user_id']) ? [$introducer->id] :
-                                    array_merge($entry->data['values']['support_user_id'], [$introducer->id])
-                            ];
-                            return $values;
-                        }
-                    );
-                }
-            } else {
-                /** @var IBankingService */
-                $bankService = app(IBankingService::class);
-                $bankService->addBalanceForUser(
-                    $request,
-                    $user,
-                    $domain->id,
-                    config('larapress.ecommerce.lms.registeration_gift.amount'),
-                    config('larapress.ecommerce.lms.registeration_gift.currency'),
-                    trans('larapress::ecommerce.banking.messages.wallet-descriptions.register_gift_wallet_desc')
-                );
-            }
+            /** @var ISupportGroupService */
+            $supportService = app(ISupportGroupService::class);
+            // add user to support/introducer group, if we have introducer
+            // add user gift balance too
+            $supportService->updateUserRegistrationGiftWithIntroducer($request, $user, $request->getIntroducerID(), true, true);
 
             /** @var ISigninService */
             $signinService = app()->make(ISigninService::class);

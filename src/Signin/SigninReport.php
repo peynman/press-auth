@@ -54,7 +54,6 @@ class SigninReport implements IReportSource
         $tags = [
             'domain' => $event->domain->id,
         ];
-        Log::debug('reporting', $tags);
         $this->reports->pushMeasurement('user.signin', 1, $tags, [], $event->timestamp);
     }
 }
