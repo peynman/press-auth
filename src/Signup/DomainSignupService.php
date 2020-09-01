@@ -27,7 +27,7 @@ use Larapress\Profiles\CRUD\UserCRUDProvider;
 use Larapress\Profiles\Flags\UserDomainFlags;
 use Larapress\Profiles\Models\PhoneNumber;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
-use Larapress\Profiles\Services\IFormEntryService;
+use Larapress\Profiles\Services\FormEntry\IFormEntryService;
 use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Models\FormEntry;
 
