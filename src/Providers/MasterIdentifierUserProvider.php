@@ -84,19 +84,8 @@ class MasterIdentifierUserProvider implements UserProvider
 		$user = null;
 
         $userClass = config('larapress.crud.user.class');
-        $query = $userClass::where(function ($q) use($credentials) {
-            $q->orWhere('name', $credentials['username']);
-            $q->orWhereHas('phones', function(Builder $q) use($credentials) {
-                $q->where('number', $credentials['username']);
-            });
-            $q->orWhereHas('emails', function(Builder $q) use($credentials) {
-                $q->where('email', $credentials['username']);
-            });
-        });
-
-
 		$domain = $this->domainRepository->getCurrentRequestDomain();
-        $query->where(function($q) use($domain) {
+        $query = $userClass::where(function($q) use($domain) {
             $q->orWhereHas('domains', function(Builder $q) use($domain) {
                 $q->where('id', $domain->id)->where('user_domain.flags', '&', UserDomainFlags::REGISTRATION_DOMAIN);
             })->orWhereHas('roles', function($q) {
@@ -104,10 +93,14 @@ class MasterIdentifierUserProvider implements UserProvider
             });
         });
 
-		if (!is_null($query)) {
-			$user = $query->first();
-        }
+        $inPhones = clone $query;
+        $user = $inPhones->whereHas('phones', function(Builder $q) use($credentials) {
+            $q->where('number', $credentials['username']);
+        })->first();
 
+        if (is_null($user)) {
+            $user = $query->where('name', $credentials['username']);
+        }
 
 		return $user;
 	}

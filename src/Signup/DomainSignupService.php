@@ -73,7 +73,8 @@ class DomainSignupService implements ISignupService
             throw new Exception(trans('auth.phone_expired'));
         }
 
-        return DB::transaction(function () use ($dbPhone, $smsMessage, $domain, $username, $password, $request) {
+        $user = null;
+        DB::transaction(function () use ($dbPhone, $smsMessage, $domain, $username, $password, $request, &$user) {
             // update & create account
             $data = $smsMessage->data;
             $data['mode'] = 'registered';
@@ -101,18 +102,30 @@ class DomainSignupService implements ISignupService
             CRUDCreated::dispatch($user, UserCRUDProvider::class, $now);
             CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
             SignupEvent::dispatch($user, $domain, $request->ip(), time());
-
-            /** @var ISupportGroupService */
-            $supportService = app(ISupportGroupService::class);
-            // add user to support/introducer group, if we have introducer
-            // add user gift balance too
-            $supportService->updateUserRegistrationGiftWithIntroducer($request, $user, $request->getIntroducerID(), true, true);
-
-            /** @var ISigninService */
-            $signinService = app()->make(ISigninService::class);
-            return $signinService->signinUser($username, $password);
         });
 
+
+        /** @var ISupportGroupService */
+        $supportService = app(ISupportGroupService::class);
+        // add user to support/introducer group, if we have introducer
+        // add user gift balance too
+        $supportService->updateUserRegistrationGiftWithIntroducer($request, $user, $request->getIntroducerID(), true, true);
+
+        if (!is_null($request->get('campaign_id', null))) {
+            $formId = $request->get('campaign_id');
+            /** @var IFormEntryService */
+            $formService = app(IFormEntryService::class);
+            $formService->updateFormEntry(
+                $request,
+                $user,
+                $formId,
+            );
+        }
+
+        $user->updateUserCache();
+        /** @var ISigninService */
+        $signinService = app()->make(ISigninService::class);
+        return $signinService->signinUser($dbPhone->number, $password);
     }
 
     /**
@@ -142,7 +155,7 @@ class DomainSignupService implements ISignupService
 
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
-        if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified' || Carbon::now()->diffInMinutes($smsMessage->updated_at) > 5) {
+        if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified') {
             throw new Exception(trans('auth.phone_expired'));
         }
 
