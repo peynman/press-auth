@@ -99,7 +99,7 @@ class MasterIdentifierUserProvider implements UserProvider
         })->first();
 
         if (is_null($user)) {
-            $user = $query->where('name', $credentials['username']);
+            $user = $query->where('name', $credentials['username'])->first();
         }
 
 		return $user;
