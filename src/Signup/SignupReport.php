@@ -57,8 +57,10 @@ class SignupReport implements IReportSource
      */
     public function handle(SignupEvent $event)
     {
+        $supportProfileId = isset($event->user->supportProfile['id']) ? $event->user->supportProfile['id']: null;
         $tags = [
             'domain' => $event->domain->id,
+            'support' => $supportProfileId,
         ];
         $this->reports->pushMeasurement('user.signup', 1, $tags, [], $event->timestamp);
     }

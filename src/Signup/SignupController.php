@@ -67,6 +67,7 @@ class SignupController extends Controller
      */
     public function resetPasswordSMSVerifyCode(ISignupService $service, ResetPasswordRequest $request) {
         return response()->json($service->resetWithPhoneNumber(
+            $request,
             $request->getPhone(),
             $request->getMessageID(),
             $request->getPassword()

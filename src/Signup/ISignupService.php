@@ -2,6 +2,8 @@
 
 namespace Larapress\Auth\Signup;
 
+use Illuminate\Http\Request;
+
 interface ISignupService
 {
     /**
@@ -20,7 +22,7 @@ interface ISignupService
      * @param string $password
      * @return array
      */
-    public function resetWithPhoneNumber(string $phone, string $msgId, string $password);
+    public function resetWithPhoneNumber(Request $request, string $phone, string $msgId, string $password);
 
     /**
      * Undocumented function

@@ -99,9 +99,9 @@ class DomainSignupService implements ISignupService
             ]);
 
             $now = Carbon::now();
-            CRUDCreated::dispatch($user, UserCRUDProvider::class, $now);
-            CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
-            SignupEvent::dispatch($user, $domain, $request->ip(), time());
+            CRUDCreated::dispatch($user, $user, UserCRUDProvider::class, $now);
+            CRUDUpdated::dispatch($user, $dbPhone, PhoneNumberCRUDProvider::class, $now);
+            SignupEvent::dispatch($user, $user, $domain, $request->ip(), time());
         });
 
 
@@ -136,7 +136,7 @@ class DomainSignupService implements ISignupService
      * @param [type] $password
      * @return void
      */
-    public function resetWithPhoneNumber(string $phone, string $msgId, string $password)
+    public function resetWithPhoneNumber(Request $request, string $phone, string $msgId, string $password)
     {
         /** @var IDdomainRepository */
         $domainRepo = app()->make(IDomainRepository::class);
@@ -169,6 +169,17 @@ class DomainSignupService implements ISignupService
         $dbPhone->user->update([
             'password' => Hash::make($password)
         ]);
+
+        if (!is_null($request->get('campaign_id', null))) {
+            $formId = $request->get('campaign_id');
+            /** @var IFormEntryService */
+            $formService = app(IFormEntryService::class);
+            $formService->updateFormEntry(
+                $request,
+                $dbPhone->user,
+                $formId,
+            );
+        }
 
         /** @var ISigninService */
         $signinService = app()->make(ISigninService::class);
@@ -273,7 +284,7 @@ class DomainSignupService implements ISignupService
             $smsMessage->update([
                 'data' => $data
             ]);
-            CRUDUpdated::dispatch($smsMessage, SMSMessageCRUDProvider::class, Carbon::now());
+            CRUDUpdated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, Carbon::now());
         }
 
         return [
@@ -314,7 +325,7 @@ class DomainSignupService implements ISignupService
                     $dbPhone->update([
                         'flags' => PhoneNumber::FLAGS_VERIFIED,
                     ]);
-                    CRUDUpdated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, Carbon::now());
+                    CRUDUpdated::dispatch(null, $dbPhone, PhoneNumberCRUDProvider::class, Carbon::now());
                 }
 
                 return $valid;
