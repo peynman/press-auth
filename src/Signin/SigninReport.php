@@ -2,12 +2,13 @@
 
 namespace Larapress\Auth\Signin;
 
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Larapress\CRUD\Services\IReportSource;
 use Larapress\Reports\Services\BaseReportSource;
 use Larapress\Reports\Services\IReportsService;
 
-class SigninReport implements IReportSource
+class SigninReport implements IReportSource, ShouldQueue
 {
     use BaseReportSource;
 

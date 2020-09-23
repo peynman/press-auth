@@ -101,7 +101,7 @@ class DomainSignupService implements ISignupService
             $now = Carbon::now();
             CRUDCreated::dispatch($user, $user, UserCRUDProvider::class, $now);
             CRUDUpdated::dispatch($user, $dbPhone, PhoneNumberCRUDProvider::class, $now);
-            SignupEvent::dispatch($user, $user, $domain, $request->ip(), time());
+            SignupEvent::dispatch($user, $domain, $request->ip(), time());
         });
 
 
@@ -246,9 +246,9 @@ class DomainSignupService implements ISignupService
                 'domain_id' => $currDomain->id,
                 'flags' => 0,
             ]);
-            CRUDCreated::dispatch($dbPhone, PhoneNumberCRUDProvider::class, $now);
+            CRUDCreated::dispatch(null, $dbPhone, PhoneNumberCRUDProvider::class, $now);
         }
-        CRUDCreated::dispatch($smsMessage, SMSMessageCRUDProvider::class, $now);
+        CRUDCreated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, $now);
         SendSMS::dispatch($smsMessage);
 
         return [
