@@ -7,7 +7,10 @@ use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Larapress\CRUD\BaseFlags;
+use Larapress\CRUD\Exceptions\AppException;
 use Larapress\Profiles\Flags\UserDomainFlags;
+use Larapress\Profiles\Flags\UserFlags;
 use Larapress\Profiles\Models\Domain;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 
