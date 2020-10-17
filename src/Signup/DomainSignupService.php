@@ -19,6 +19,7 @@ use Larapress\CRUD\Models\Role;
 use Larapress\ECommerce\Services\Banking\IBankingService;
 use Larapress\ECommerce\Services\SupportGroup\ISupportGroupService;
 use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
+use Larapress\Notifications\Models\SMSGatewayData;
 use Larapress\Notifications\Models\SMSMessage;
 use Larapress\Notifications\Services\SMSService\ISMSService;
 use Larapress\Notifications\Services\SMSService\Jobs\SendSMS;
@@ -92,35 +93,37 @@ class DomainSignupService implements ISignupService
                 'user_id' => $user->id,
             ]);
 
-            $role = Role::find(config('larapress.auth.signup.default-role'));
+            $role = Role::find(config('larapress.auth.signup.default_role'));
             $user->roles()->attach($role);
             $user->domains()->attach($domain, [
                 'flags' => UserDomainFlags::REGISTRATION_DOMAIN | UserDomainFlags::MEMBERSHIP_DOMAIN,
             ]);
 
+            /** @var IFormEntryService */
+            $formService = app(IFormEntryService::class);
+            if (!is_null($request->get('campaign_id', null))) {
+                $formId = $request->get('campaign_id');
+                $formService->updateFormEntry(
+                    $request,
+                    $user,
+                    $formId,
+                );
+            }
+            if (!is_null(config('larapress.auth.signup.autofill-form'))) {
+                $formId = config('larapress.auth.signup.autofill-form');
+                $formService->updateFormEntry(
+                    $request,
+                    $user,
+                    $formId,
+                );
+            }
+
             $now = Carbon::now();
             CRUDCreated::dispatch($user, $user, UserCRUDProvider::class, $now);
             CRUDUpdated::dispatch($user, $dbPhone, PhoneNumberCRUDProvider::class, $now);
-            SignupEvent::dispatch($user, $domain, $request->ip(), time());
+            SignupEvent::dispatch($user, $domain, $request->getIntroducerID(), $request->ip(), time());
         });
 
-
-        /** @var ISupportGroupService */
-        $supportService = app(ISupportGroupService::class);
-        // add user to support/introducer group, if we have introducer
-        // add user gift balance too
-        $supportService->updateUserRegistrationGiftWithIntroducer($request, $user, $request->getIntroducerID(), true, true);
-
-        if (!is_null($request->get('campaign_id', null))) {
-            $formId = $request->get('campaign_id');
-            /** @var IFormEntryService */
-            $formService = app(IFormEntryService::class);
-            $formService->updateFormEntry(
-                $request,
-                $user,
-                $formId,
-            );
-        }
 
         $user->updateUserCache();
         /** @var ISigninService */
@@ -194,12 +197,11 @@ class DomainSignupService implements ISignupService
      */
     public function sendPhoneVerifySMS(string $phone)
     {
-        /** @var ISMSService */
-        $smsService = app()->make(ISMSService::class);
         /** @var IDdomainRepository */
         $domainRepo = app()->make(IDomainRepository::class);
         $domain = $domainRepo->getCurrentRequestDomain();
-        $gateway = $smsService->findGatewayData($domain);
+
+        $gateway = SMSGatewayData::find(config('larapress.auth.signup.sms.default_gateway'));
 
         if (is_null($gateway)) {
             throw new Exception(trans('larapress::auth.exceptions.no_gateway'));
@@ -210,12 +212,12 @@ class DomainSignupService implements ISignupService
         } else {
             $verify_code = Helpers::randomString(config('larapress.auth.signup.sms.code_len', 5));
         }
-        $message = $verify_code; //trans('larapress::auth.signup.sms.verify', ['code' => );
+        $message = trans('larapress::auth.signup.messages.signup_code', ['code' => $verify_code]);
 
         $smsMessage = SMSMessage::create([
-            'author_id' => config('larapress.auth.signup.sms.default-author'),
+            'author_id' => config('larapress.auth.signup.sms.default_author'),
             'sms_gateway_id' => $gateway->id,
-            'from' => config('larapress.auth.signup.sms.from'),
+            'from' => trans('larapress::auth.signup.messages.from'),
             'to' => $phone,
             'message' => $message,
             'flags' => SMSMessage::FLAGS_VERIFICATION_MESSAGE,
@@ -227,15 +229,8 @@ class DomainSignupService implements ISignupService
             ]
         ]);
 
-        /** @var IDomainRepository */
-        $domainRepo = app()->make(IDomainRepository::class);
-        $currDomain = $domainRepo->getCurrentRequestDomain();
-
-        /** @var IDomainRepository */
-        $domainRepo = app()->make(IDomainRepository::class);
-        $currDomain = $domainRepo->getCurrentRequestDomain();
         $dbPhone = PhoneNumber::where('number', $phone)
-            ->where('domain_id', $currDomain->id)
+            ->where('domain_id', $domain->id)
             ->first();
 
         $now = Carbon::now();
@@ -243,7 +238,7 @@ class DomainSignupService implements ISignupService
             $dbPhone = PhoneNumber::create([
                 'number' => $phone,
                 'user_id' => null,
-                'domain_id' => $currDomain->id,
+                'domain_id' => $domain->id,
                 'flags' => 0,
             ]);
             CRUDCreated::dispatch(null, $dbPhone, PhoneNumberCRUDProvider::class, $now);

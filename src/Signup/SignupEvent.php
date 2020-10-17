@@ -18,6 +18,8 @@ class SignupEvent implements ShouldQueue
     public $ip;
     /** @var int */
     public $timestamp;
+    /** @var int */
+    public $introducer;
 
     /**
      * Create a new event instance.
@@ -27,11 +29,12 @@ class SignupEvent implements ShouldQueue
      * @param $ip
      * @param $timestamp
      */
-    public function __construct($user, $domain, $ip, $timestamp)
+    public function __construct($user, $domain, $introducer, $ip, $timestamp)
     {
         $this->user = $user;
         $this->domain = $domain;
         $this->ip = $ip;
         $this->timestamp = $timestamp;
+        $this->introducer = $introducer;
     }
 }

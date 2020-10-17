@@ -1,11 +1,23 @@
+# W.I.P.
 
-# Larapress Dashboard
+# Larapress Authentication
+A package to provide SMS, Email based registration with Larapress CRUD & based on Models provided in Larapress Profiles.
 
-[![CircleCI](https://circleci.com/gh/peynman/larapress-reports.svg?style=svg)](https://circleci.com/gh/peynman/larapress-reports)
-[![Coverage Status](https://img.shields.io/codecov/c/github/peynman/larapress-reports.svg?branch=master&style=flat-square)](https://codecov.io/github/peynman/larapress-reports?branch=master)
-[![Latest Stable Version](https://img.shields.io/packagist/v/peynman/larapress-reports.svg?style=flat-square)](https://packagist.org/packages/peynman/larapress-reports)
-[![Total Downloads](https://img.shields.io/packagist/dt/peynman/larapress-reports.svg?style=flat-square)](https://packagist.org/packages/peynman/larapress-reports)
-[![License](https://img.shields.io/packagist/l/peynman/larapress-reports.svg?style=flat-square)](https://packagist.org/packages/peynman/larapress-reports)
-[![StyleCI](https://styleci.io/repos/225846364/shield)](https://styleci.io/repos/225846364)
+## Dependencies
+* Larapress CRUD
+* Larapress Reports
+* Larapress Notifications
+* Larapress Profiles
 
-## Start
+## Install
+1. ```composer require ```
+
+## Config
+1. Run ```php artisan vendor:publish --tag=larapress-auth```
+1. Set ```larapress``` as your ```auth.providers.user.driver``` config
+1. Set default ```Role``` ID as larapress ```larapress.auth.signup.default_role``` config, or set it null to disable signup
+1. Set default ```SMSGatewayData``` ID as larapress ```larapress.auth.signup.sms.default_gateway``` config
+1. Set default admin user id for ```larapress.auth.signup.sms.default_author``` config
+
+## Usage
+* After configuration is completed you can use API endpoints to register or authenticate users

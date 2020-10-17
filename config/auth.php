@@ -21,12 +21,13 @@ return [
 
     'signup' => [
         'sms' => [
-            'from' => 'Signup Service',
             'numbers_only' => true,
             'code_len' => 6,
-            'default-author' => 1,
+            'default_author' => 1,
+            'default_gateway' => null,
         ],
 
-        'default-role' => 3,
+        'default_role' => null,
+        'autofill_form' => null,
     ],
 ];
