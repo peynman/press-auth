@@ -3,6 +3,9 @@
 namespace Larapress\Auth\Signup;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
+use Larapress\Profiles\Models\Form;
+use Larapress\Profiles\Services\FormEntry\IFormEntryService;
 
 class SignupRequest extends FormRequest
 {
@@ -24,13 +27,27 @@ class SignupRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $formValidations = [];
+        if (!is_null(config('larapress.auth.signup.autofill_form'))) {
+            $formId = config('larapress.auth.signup.autofill_form');
+            $form = Form::find($formId);
+            if (!is_null($form)) {
+                /** @var IFormEntryService */
+                $formService = app(IFormEntryService::class);
+                [$rules, $inputs] = $formService->getFormValidationRules($form);
+                foreach ($rules as $ruleName => $rule) {
+                    $formValidations[$form->name.'.'.$ruleName] = $rule;
+                }
+            }
+        }
+
+        return array_merge([
             'phone' => 'required|numeric|exists:phone_numbers,number|digits:11',
             'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-]+)(\d+)?$)/u',
             'password' => 'string|min:6|confirmed|required',
             'msg_id' => 'required|numeric|exists:sms_messages,id',
             'introducer_id' => 'nullable|numeric|exists:users,id',
-        ];
+        ], $formValidations);
     }
 
 
