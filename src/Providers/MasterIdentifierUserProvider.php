@@ -89,9 +89,12 @@ class MasterIdentifierUserProvider implements UserProvider
         $userClass = config('larapress.crud.user.class');
 		$domain = $this->domainRepository->getCurrentRequestDomain();
         $query = $userClass::where(function($q) use($domain) {
-            $q->orWhereHas('domains', function(Builder $q) use($domain) {
-                $q->where('id', $domain->id)->where('user_domain.flags', '&', UserDomainFlags::REGISTRATION_DOMAIN);
-            })->orWhereHas('roles', function($q) {
+            if (!is_null($domain)) {
+                $q->orWhereHas('domains', function(Builder $q) use($domain) {
+                    $q->where('id', $domain->id)->where('user_domain.flags', '&', UserDomainFlags::REGISTRATION_DOMAIN);
+                });
+            }
+            $q->orWhereHas('roles', function($q) {
                 $q->whereIn('name', config('larapress.profiles.security.roles.super-role'));
             });
         });
