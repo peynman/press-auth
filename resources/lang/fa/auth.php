@@ -19,6 +19,6 @@ return [
     ],
 
     'exceptions' => [
-        'no_gateway' => "Could not send phone verify sms, no GatewayData was found"
+        'no_gateway' => 'درگاه پیامکی برای ثبت نام ثبت نشده است'
     ]
 ];
