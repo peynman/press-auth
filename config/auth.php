@@ -14,7 +14,12 @@ return [
 	],
 
     'middleware' => [
-        'throttle:60,1'
+        'throttle:60,1',
+        \App\Http\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\Session\Middleware\AuthenticateSession::class,
+        'bindings',
     ],
 
     'prefix' => 'api',
