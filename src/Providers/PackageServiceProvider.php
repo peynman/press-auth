@@ -34,6 +34,7 @@ class PackageServiceProvider extends ServiceProvider
     {
         $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'larapress');
 	    $this->loadRoutesFrom(__DIR__.'/../../routes/auth.php');
+	    $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
 	    $this->loadMigrationsFrom(__DIR__.'/../../migrations');
 
         $this->publishes([

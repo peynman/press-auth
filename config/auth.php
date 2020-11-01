@@ -7,10 +7,10 @@ return [
 	],
 
 	'redirects' => [
-		'login' => 'dashboard.any',
-		'logout' => 'dashboard.login.view',
-		'home' => 'home',
-		'signup' => 'dashboard.login.view',
+		'login' => '/signin',
+		'logout' => '/logout',
+		'home' => '/',
+		'signup' => '/signup',
 	],
 
     'middleware' => [
@@ -19,7 +19,6 @@ return [
         \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
         \Illuminate\Session\Middleware\StartSession::class,
         \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'bindings',
     ],
 
     'prefix' => 'api',

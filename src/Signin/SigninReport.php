@@ -54,7 +54,7 @@ class SigninReport implements IReportSource, ShouldQueue
     {
         $supportProfileId = isset($event->user->supportProfile['id']) ? $event->user->supportProfile['id']: null;
         $tags = [
-            'domain' => $event->domain->id,
+            'domain' => is_null($event->domain) ? -1 : $event->domain->id,
             'support' => $supportProfileId,
             'user_id' => $event->user->id,
         ];

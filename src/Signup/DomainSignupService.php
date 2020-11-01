@@ -30,6 +30,7 @@ use Larapress\Profiles\Models\PhoneNumber;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 use Larapress\Profiles\Services\FormEntry\IFormEntryService;
 use Larapress\Profiles\IProfileUser;
+use Larapress\Profiles\Models\Form;
 use Larapress\Profiles\Models\FormEntry;
 
 class DomainSignupService implements ISignupService
@@ -106,16 +107,22 @@ class DomainSignupService implements ISignupService
                 $formService->updateFormEntry(
                     $request,
                     $user,
-                    $formId,
+                    $formId
                 );
             }
-            if (!is_null(config('larapress.auth.signup.autofill-form'))) {
-                $formId = config('larapress.auth.signup.autofill-form');
-                $formService->updateFormEntry(
-                    $request,
-                    $user,
-                    $formId,
-                );
+            if (!is_null(config('larapress.auth.signup.autofill_form'))) {
+                $formId = config('larapress.auth.signup.autofill_form');
+                $form = Form::find($formId);
+                if (!is_null($form)) {
+                    $values = $request->get($form->name);
+                    $formRequest = clone $request;
+                    $formRequest->merge($values);
+                    $formService->updateFormEntry(
+                        $formRequest,
+                        $user,
+                        $formId
+                    );
+                }
             }
 
             $now = Carbon::now();
@@ -180,7 +187,7 @@ class DomainSignupService implements ISignupService
             $formService->updateFormEntry(
                 $request,
                 $dbPhone->user,
-                $formId,
+                $formId
             );
         }
 
@@ -261,7 +268,7 @@ class DomainSignupService implements ISignupService
     public function verifyPhoneSMS(string $phone, string $code)
     {
         $smsMessage = SMSMessage::query()
-            ->where('from', config('larapress.auth.signup.sms.from'))
+            ->where('from', trans('larapress::auth.signup.messages.from'))
             ->where('to', $phone)
             ->where('flags', '&', SMSMessage::FLAGS_VERIFICATION_MESSAGE)
             ->orderBy('created_at', 'DESC')
@@ -280,13 +287,15 @@ class DomainSignupService implements ISignupService
                 'data' => $data
             ]);
             CRUDUpdated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, Carbon::now());
+
+            return [
+                'message' => $isValid ? trans('larapress::auth.signup.messages.verify_success') : trans('larapress::auth.signup.messages.verify_failed'),
+                'status' => $isValid,
+                'msg_id' => $smsMessage->id,
+            ];
         }
 
-        return [
-            'message' => $isValid ? trans('larapress::auth.signup.messages.verify_success') : trans('larapress::auth.signup.messages.verify_failed'),
-            'status' => $isValid,
-            'msg_id' => $smsMessage->id,
-        ];
+        throw new AppException(AppException::ERR_INVALID_QUERY);
     }
 
 
