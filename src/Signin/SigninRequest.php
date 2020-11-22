@@ -28,7 +28,7 @@ class SigninRequest extends FormRequest
             'username' => 'required',
             'password' => 'required',
             'key' => 'required|string',
-            'captcha' => 'required|captcha_api:'.$this->request->get('key'),
+            'captcha' => 'required|captcha_api:'.$this->request->get('key').',default',
         ];
     }
 
