@@ -31,7 +31,7 @@
     "php": "^7.3.0",
     "laravel/framework": "^8.0",
     "tymon/jwt-auth": "^1.0.1",
-    "peynman/larapress-profiles": "master",
+    "peynman/larapress-ecommerce": "master",
     "peynman/larapress-notifications": "master"
   },
   "require-dev": {

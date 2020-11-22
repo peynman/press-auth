@@ -131,8 +131,6 @@ class DomainSignupService implements ISignupService
             SignupEvent::dispatch($user, $domain, $request->getIntroducerID(), $request->ip(), time());
         });
 
-
-        $user->updateUserCache();
         /** @var ISigninService */
         $signinService = app()->make(ISigninService::class);
         return $signinService->signinUser($dbPhone->number, $password);

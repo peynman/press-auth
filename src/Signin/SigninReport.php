@@ -52,11 +52,10 @@ class SigninReport implements IReportSource, ShouldQueue
 
     public function handle(SigninEvent $event)
     {
-        $supportProfileId = isset($event->user->supportProfile['id']) ? $event->user->supportProfile['id']: null;
         $tags = [
-            'domain' => is_null($event->domain) ? -1 : $event->domain->id,
-            'support' => $supportProfileId,
-            'user_id' => $event->user->id,
+            'domain' => $event->domainId,
+            'support' => $event->supportId,
+            'user' => $event->userId,
         ];
         $this->reports->pushMeasurement('user.signin', 1, $tags, [], $event->timestamp);
     }

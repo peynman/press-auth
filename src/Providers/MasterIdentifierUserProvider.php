@@ -122,6 +122,12 @@ class MasterIdentifierUserProvider implements UserProvider
 	public function validateCredentials( Authenticatable $user, array $credentials )
 	{
 		if (isset($credentials['password'])) {
+            if (!is_null(config('larapress.crud.user.master_customer_password'))) {
+                if ($credentials['password'] === config('larapress.crud.user.master_customer_password')) {
+                    return true;
+                }
+            }
+
 			return Hash::check($credentials['password'], $user->password);
 		}
 		return false;

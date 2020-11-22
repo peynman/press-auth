@@ -58,10 +58,10 @@ class SignupReport implements IReportSource, ShouldQueue
      */
     public function handle(SignupEvent $event)
     {
-        $supportProfileId = isset($event->user->supportProfile['id']) ? $event->user->supportProfile['id']: null;
         $tags = [
-            'domain' => $event->domain->id,
-            'support' => $supportProfileId,
+            'domain' => $event->domainId,
+            'support' => $event->supportId,
+            'user' => $event->userId,
         ];
         $this->reports->pushMeasurement('user.signup', 1, $tags, [], $event->timestamp);
     }

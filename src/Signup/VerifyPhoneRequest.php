@@ -26,7 +26,7 @@ class VerifyPhoneRequest  extends FormRequest {
         return [
             'phone' => 'required|numeric|regex:/(09)[0-9]{9}/|digits:11',
             'key' => 'required|string',
-            'captcha' => 'required|captcha_api:'.$this->request->get('key'),
+            'captcha' => 'required|captcha_api:'.$this->request->get('key').',default',
             'accept_terms' => 'required|boolean|in:1,true',
         ];
     }

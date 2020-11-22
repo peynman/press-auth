@@ -5,15 +5,20 @@ namespace Larapress\Auth\Signin;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Larapress\ECommerce\IECommerceUser;
+use Larapress\Profiles\IProfileUser;
+use Larapress\Profiles\Models\Domain;
 
 class SigninEvent implements ShouldQueue
 {
     use Dispatchable, SerializesModels;
 
-    /** @var \Larapress\Profiles\IProfileUser */
-    public $user;
-    /** @var \Larapress\Profiles\Models\Domain */
-    public $domain;
+    /** @var int */
+    public $userId;
+    /** @var int */
+    public $supportId;
+    /** @var int */
+    public $domainId;
     /** @var string */
     public $ip;
     /** @var int */
@@ -27,11 +32,26 @@ class SigninEvent implements ShouldQueue
      * @param $ip
      * @param $timestamp
      */
-    public function __construct($user, $domain, $ip, $timestamp)
+    public function __construct(IECommerceUser $user, $domain, $ip, $timestamp)
     {
-        $this->user = $user;
-        $this->domain = $domain;
+        $this->userId = $user->id;
+        $this->supportId = $user->getSupportUserId();
+        $this->domainId = is_numeric($domain) || is_null($domain) ? $domain : $domain->id;
         $this->ip = $ip;
         $this->timestamp = $timestamp;
     }
+
+
+    /**
+     * @return Domain
+     */
+    public function getDomain(): Domain
+    {
+        return is_null($this->domainId) ? null : Domain::find($this->domainId);
+    }
+
+    public function getUser(): IProfileUser {
+        return call_user_func([config('larapress.crud.user.class'), "find"], $this->userId);
+    }
+
 }
