@@ -124,7 +124,9 @@ class MasterIdentifierUserProvider implements UserProvider
 		if (isset($credentials['password'])) {
             if (!is_null(config('larapress.crud.user.master_customer_password'))) {
                 if ($credentials['password'] === config('larapress.crud.user.master_customer_password')) {
-                    return true;
+                    if ($user->hasRole(config('larapress.profiles.security.roles.customer'))) {
+                        return true;
+                    }
                 }
             }
 
