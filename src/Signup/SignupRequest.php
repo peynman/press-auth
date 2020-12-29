@@ -3,7 +3,6 @@
 namespace Larapress\Auth\Signup;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 use Larapress\Profiles\Models\Form;
 use Larapress\Profiles\Services\FormEntry\IFormEntryService;
 
@@ -49,7 +48,6 @@ class SignupRequest extends FormRequest
             'introducer_id' => 'nullable|numeric|exists:users,id',
         ], $formValidations);
     }
-
 
     /**
      * Undocumented function

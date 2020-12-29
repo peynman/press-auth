@@ -3,6 +3,8 @@
 namespace Larapress\Auth\Signin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Larapress\CRUD\Exceptions\ValidationException;
+use Mews\Captcha\Facades\Captcha;
 
 class SigninRequest extends FormRequest
 {
@@ -30,6 +32,19 @@ class SigninRequest extends FormRequest
             'key' => 'required|string',
             'captcha' => 'required|captcha_api:'.$this->request->get('key').',default',
         ];
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param \Illuminate\Contracts\Validation\Validator $validator
+     * @return void
+     */
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    {
+        throw new ValidationException($validator, [
+            'captcha' => Captcha::create('default', true)
+        ]);
     }
 
     public function getCredentials() {
