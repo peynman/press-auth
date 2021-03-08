@@ -6,7 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Larapress\CRUD\Exceptions\ValidationException;
 use Mews\Captcha\Facades\Captcha;
 
-class VerifyPhoneRequest  extends FormRequest {
+class VerifyPhoneRequest extends FormRequest
+{
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -51,7 +52,8 @@ class VerifyPhoneRequest  extends FormRequest {
      *
      * @return String
      */
-    public function getPhone() {
+    public function getPhone()
+    {
         return $this->get('phone');
     }
 }

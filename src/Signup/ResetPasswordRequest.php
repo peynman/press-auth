@@ -37,7 +37,8 @@ class ResetPasswordRequest extends FormRequest
      *
      * @return String
      */
-    public function getPhone() {
+    public function getPhone()
+    {
         return $this->get('phone');
     }
 
@@ -46,7 +47,8 @@ class ResetPasswordRequest extends FormRequest
      *
      * @return String
      */
-    public function getPassword() {
+    public function getPassword()
+    {
         return $this->get('password');
     }
 
@@ -55,7 +57,8 @@ class ResetPasswordRequest extends FormRequest
      *
      * @return String
      */
-    public function getMessageID() {
+    public function getMessageID()
+    {
         return $this->get('msg_id');
     }
 }

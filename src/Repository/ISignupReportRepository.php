@@ -4,7 +4,8 @@ namespace Larapress\Auth\Repository;
 
 use Larapress\Profiles\IProfileUser;
 
-interface ISignupReportRepository {
+interface ISignupReportRepository
+{
     /**
      * Undocumented function
      *

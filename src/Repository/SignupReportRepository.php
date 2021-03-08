@@ -2,10 +2,10 @@
 
 namespace Larapress\Auth\Repository;
 
-use Carbon\Carbon;
 use Larapress\Reports\Services\IReportsService;
 
-class SignupReportRepository implements ISignupReportRepository {
+class SignupReportRepository implements ISignupReportRepository
+{
 
     /**
      * Undocumented function
@@ -13,7 +13,8 @@ class SignupReportRepository implements ISignupReportRepository {
      * @param IProfileUser $user
      * @return array
      */
-    public function getSigninPerDomain($user, $from, $to) {
+    public function getSigninPerDomain($user)
+    {
         /** @var IReportsService $service */
         $service = app(IReportsService::class);
 
@@ -40,7 +41,7 @@ class SignupReportRepository implements ISignupReportRepository {
      * @param IProfileUser $user
      * @return array
      */
-    public function getSignupPerDomain($user) {
-
+    public function getSignupPerDomain($user)
+    {
     }
 }

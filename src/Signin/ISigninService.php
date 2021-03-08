@@ -2,9 +2,6 @@
 
 namespace Larapress\Auth\Signin;
 
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Http\Request;
-use Larapress\Auth\Signin\SigninRequest;
 use Larapress\Profiles\IProfileUser;
 
 interface ISigninService

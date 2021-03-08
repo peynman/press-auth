@@ -54,7 +54,8 @@ class SignupRequest extends FormRequest
      *
      * @return String
      */
-    public function getPhone() {
+    public function getPhone()
+    {
         return $this->get('phone');
     }
 
@@ -63,7 +64,8 @@ class SignupRequest extends FormRequest
      *
      * @return String
      */
-    public function getUsername() {
+    public function getUsername()
+    {
         return $this->get('username');
     }
 
@@ -72,7 +74,8 @@ class SignupRequest extends FormRequest
      *
      * @return String
      */
-    public function getPassword() {
+    public function getPassword()
+    {
         return $this->get('password');
     }
 
@@ -81,7 +84,8 @@ class SignupRequest extends FormRequest
      *
      * @return String
      */
-    public function getMessageID() {
+    public function getMessageID()
+    {
         return $this->get('msg_id');
     }
 
@@ -90,7 +94,8 @@ class SignupRequest extends FormRequest
      *
      * @return string
      */
-    public function getIntroducerID() {
+    public function getIntroducerID()
+    {
         return $this->get('introducer_id');
     }
 }

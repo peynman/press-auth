@@ -5,9 +5,15 @@ namespace Larapress\Auth\Signup;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * @group User Registration
+ *
+ * Signup users with email or phone number in a specific domain.
+ */
 class SignupController extends Controller
 {
-    public static function registerRoutes() {
+    public static function registerRoutes()
+    {
         Route::post('signup/sms/verify', '\\'.self::class.'@sendSMSVerifyCode')
             ->name('user.any.signup.sms.verify');
 
@@ -26,7 +32,8 @@ class SignupController extends Controller
      * @param VerifyPhoneRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function sendSMSVerifyCode(ISignupService $service, VerifyPhoneRequest $request) {
+    public function sendSMSVerifyCode(ISignupService $service, VerifyPhoneRequest $request)
+    {
         return response()->json($service->sendPhoneVerifySMS($request->getPhone()));
     }
 
@@ -39,7 +46,8 @@ class SignupController extends Controller
      * @param VerifyPhoneCheckRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function resolveSMSVerifyCode(ISignupService $service, VerifyPhoneCheckRequest $request) {
+    public function resolveSMSVerifyCode(ISignupService $service, VerifyPhoneCheckRequest $request)
+    {
         return response()->json($service->resolveSignUpWithPhoneVerifySMS($request->getPhone(), $request->getCode()));
     }
 
@@ -52,7 +60,8 @@ class SignupController extends Controller
      * @param VerifyPhoneCheckRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function registerSMSVerifyCode(ISignupService $service, SignupRequest $request) {
+    public function registerSMSVerifyCode(ISignupService $service, SignupRequest $request)
+    {
         return response()->json($service->signupWithPhoneNumber($request));
     }
 
@@ -65,7 +74,8 @@ class SignupController extends Controller
      * @param VerifyPhoneCheckRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function resetPasswordSMSVerifyCode(ISignupService $service, ResetPasswordRequest $request) {
+    public function resetPasswordSMSVerifyCode(ISignupService $service, ResetPasswordRequest $request)
+    {
         return response()->json($service->resetWithPhoneNumber(
             $request,
             $request->getPhone(),

@@ -4,7 +4,8 @@ namespace Larapress\Auth\Signup;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class VerifyPhoneCheckRequest  extends FormRequest {
+class VerifyPhoneCheckRequest extends FormRequest
+{
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -34,7 +35,8 @@ class VerifyPhoneCheckRequest  extends FormRequest {
      *
      * @return String
      */
-    public function getPhone() {
+    public function getPhone()
+    {
         return $this->get('phone');
     }
 
@@ -44,7 +46,8 @@ class VerifyPhoneCheckRequest  extends FormRequest {
      *
      * @return String
      */
-    public function getCode() {
+    public function getCode()
+    {
         return $this->get('code');
     }
 }

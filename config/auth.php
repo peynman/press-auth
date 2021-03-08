@@ -1,17 +1,12 @@
 <?php
 
 return [
-	'theme' => [
-		'name' => null,
-		'namespace' => 'larapress:auth'
-	],
-
-	'redirects' => [
-		'login' => '/signin',
-		'logout' => '/logout',
-		'home' => '/',
-		'signup' => '/signup',
-	],
+    'redirects' => [
+        'login' => '/signin',
+        'logout' => '/logout',
+        'home' => '/',
+        'signup' => '/signup',
+    ],
 
     'middleware' => [
         'throttle:60,1',
@@ -22,6 +17,25 @@ return [
     ],
 
     'prefix' => 'api',
+
+    'routes' => [
+        'signin' => 'signin',
+        'signup' => 'signup',
+    ],
+
+    // force 2 step (sms verification) on login for these accounts
+    'force_2_step_auth' => [
+        'super-role',
+        'accounting',
+        'studio-admin',
+        'sale-manager',
+    ],
+
+    // limit active sessions for these accounts
+    'limit_sessions' => [
+        'customer' => 1,
+        'student' => 1,
+    ],
 
     'signup' => [
         'sms' => [

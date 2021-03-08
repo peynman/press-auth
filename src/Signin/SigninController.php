@@ -6,9 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * @group User Authentication
+ *
+ * Sign in users based on their registration domain.
+ */
 class SigninController extends Controller
 {
-    public static function registerRoutes() {
+    public static function registerRoutes()
+    {
         Route::post('signin', '\\'.self::class.'@signin')
             ->name('users.any.signin');
 
@@ -16,7 +22,8 @@ class SigninController extends Controller
             ->name('users.any.logout');
     }
 
-    public static function registerPublicWebRoutes() {
+    public static function registerPublicWebRoutes()
+    {
         Route::any('logout', function (ISigninService $service) {
             $service->logout();
             return redirect('/');
@@ -28,7 +35,8 @@ class SigninController extends Controller
      * @return \Illuminate\Http\Response
      * @throws \Larapress\Core\Exceptions\AppException
      */
-    public function signin(ISigninService $service, SigninRequest $request) {
+    public function signin(ISigninService $service, SigninRequest $request)
+    {
         return response()->json(array_merge($service->signin($request), [
         ]));
     }
@@ -37,7 +45,8 @@ class SigninController extends Controller
      * @param ISigninService $service
      * @return \Illuminate\Http\Response
      */
-    public function logout(ISigninService $service, Request $request) {
+    public function logout(ISigninService $service, Request $request)
+    {
         return response()->json($service->logout());
     }
 }

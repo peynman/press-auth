@@ -5,13 +5,8 @@ namespace Larapress\Auth\Providers;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Larapress\CRUD\BaseFlags;
-use Larapress\CRUD\Exceptions\AppException;
 use Larapress\Profiles\Flags\UserDomainFlags;
-use Larapress\Profiles\Flags\UserFlags;
-use Larapress\Profiles\Models\Domain;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 
 class MasterIdentifierUserProvider implements UserProvider
@@ -32,75 +27,75 @@ class MasterIdentifierUserProvider implements UserProvider
     }
 
     /**
-	 * Retrieve a user by their unique identifier.
-	 *
-	 * @param  mixed $identifier
-	 *
-	 * @return \Illuminate\Contracts\Auth\Authenticatable|null
-	 */
-	public function retrieveById( $identifier )
-	{
-		$userClass = config('larapress.crud.user.class');
-		return $userClass::find($identifier);
-	}
+     * Retrieve a user by their unique identifier.
+     *
+     * @param  mixed $identifier
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    public function retrieveById($identifier)
+    {
+        $userClass = config('larapress.crud.user.class');
+        return $userClass::find($identifier);
+    }
 
-	/**
-	 * Retrieve a user by their unique identifier and "remember me" token.
-	 *
-	 * @param  mixed  $identifier
-	 * @param  string $token
-	 *
-	 * @return \Illuminate\Contracts\Auth\Authenticatable|null
-	 */
-	public function retrieveByToken( $identifier, $token )
-	{
-		$userClass = config('larapress.crud.user.class');
-		return $userClass::where('id', $identifier)->where('remember_token', $token)->first();
-	}
+    /**
+     * Retrieve a user by their unique identifier and "remember me" token.
+     *
+     * @param  mixed  $identifier
+     * @param  string $token
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    public function retrieveByToken($identifier, $token)
+    {
+        $userClass = config('larapress.crud.user.class');
+        return $userClass::where('id', $identifier)->where('remember_token', $token)->first();
+    }
 
-	/**
-	 * Update the "remember me" token for the given user in storage.
-	 *
-	 * @param  \Illuminate\Contracts\Auth\Authenticatable $user
-	 * @param  string                                     $token
-	 *
-	 * @return void
-	 */
-	public function updateRememberToken( Authenticatable $user, $token )
-	{
-		$user->update([
-			'remember_token' => $token,
-		]);
-	}
+    /**
+     * Update the "remember me" token for the given user in storage.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param  string                                     $token
+     *
+     * @return void
+     */
+    public function updateRememberToken(Authenticatable $user, $token)
+    {
+        $user->update([
+            'remember_token' => $token,
+        ]);
+    }
 
-	/**
-	 * Retrieve a user by the given credentials.
-	 *
-	 * @param  array $credentials
-	 *
-	 * @return \Illuminate\Contracts\Auth\Authenticatable|null
-	 */
-	public function retrieveByCredentials( array $credentials )
-	{
-	    /** @var \Illuminate\Database\Eloquent\Builder $query */
-		$query = null;
-		$user = null;
+    /**
+     * Retrieve a user by the given credentials.
+     *
+     * @param  array $credentials
+     *
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
+     */
+    public function retrieveByCredentials(array $credentials)
+    {
+        /** @var \Illuminate\Database\Eloquent\Builder $query */
+        $query = null;
+        $user = null;
 
         $userClass = config('larapress.crud.user.class');
-		$domain = $this->domainRepository->getCurrentRequestDomain();
-        $query = $userClass::where(function($q) use($domain) {
+        $domain = $this->domainRepository->getCurrentRequestDomain();
+        $query = $userClass::where(function ($q) use ($domain) {
             if (!is_null($domain)) {
-                $q->orWhereHas('domains', function(Builder $q) use($domain) {
+                $q->orWhereHas('domains', function (Builder $q) use ($domain) {
                     $q->where('id', $domain->id)->where('user_domain.flags', '&', UserDomainFlags::REGISTRATION_DOMAIN);
                 });
             }
-            $q->orWhereHas('roles', function($q) {
+            $q->orWhereHas('roles', function ($q) {
                 $q->whereIn('name', config('larapress.profiles.security.roles.super-role'));
             });
         });
 
         $inPhones = clone $query;
-        $user = $inPhones->whereHas('phones', function(Builder $q) use($credentials) {
+        $user = $inPhones->whereHas('phones', function (Builder $q) use ($credentials) {
             $q->where('number', $credentials['username']);
         })->first();
 
@@ -108,20 +103,20 @@ class MasterIdentifierUserProvider implements UserProvider
             $user = $query->where('name', $credentials['username'])->first();
         }
 
-		return $user;
-	}
+        return $user;
+    }
 
-	/**
-	 * Validate a user against the given credentials.
-	 *
-	 * @param  \Illuminate\Contracts\Auth\Authenticatable $user
-	 * @param  array                                      $credentials
-	 *
-	 * @return bool
-	 */
-	public function validateCredentials( Authenticatable $user, array $credentials )
-	{
-		if (isset($credentials['password'])) {
+    /**
+     * Validate a user against the given credentials.
+     *
+     * @param  \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param  array                                      $credentials
+     *
+     * @return bool
+     */
+    public function validateCredentials(Authenticatable $user, array $credentials)
+    {
+        if (isset($credentials['password'])) {
             if (!is_null(config('larapress.crud.user.master_customer_password'))) {
                 if ($credentials['password'] === config('larapress.crud.user.master_customer_password')) {
                     if ($user->hasRole(array_merge(config('larapress.profiles.security.roles.customer'), config('larapress.profiles.security.roles.affiliate')))) {
@@ -130,8 +125,8 @@ class MasterIdentifierUserProvider implements UserProvider
                 }
             }
 
-			return Hash::check($credentials['password'], $user->password);
-		}
-		return false;
-	}
+            return Hash::check($credentials['password'], $user->password);
+        }
+        return false;
+    }
 }

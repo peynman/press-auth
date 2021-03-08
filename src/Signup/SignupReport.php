@@ -2,7 +2,6 @@
 
 namespace Larapress\Auth\Signup;
 
-use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Larapress\CRUD\Services\IReportSource;
 use Larapress\Reports\Services\IReportsService;

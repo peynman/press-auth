@@ -3,7 +3,6 @@
 namespace Larapress\Auth\Signin;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Log;
 use Larapress\CRUD\Services\IReportSource;
 use Larapress\Reports\Services\BaseReportSource;
 use Larapress\Reports\Services\IReportsService;
@@ -56,6 +55,7 @@ class SigninReport implements IReportSource, ShouldQueue
             'domain' => $event->domainId,
             'support' => $event->supportId,
             'user' => $event->userId,
+            'user_history' => $event->userDaysAfterSignup,
         ];
         $this->reports->pushMeasurement('user.signin', 1, $tags, [], $event->timestamp);
     }

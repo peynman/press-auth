@@ -4,10 +4,12 @@
 /storage/*.key
 /vendor
 /.idea
+/.coverage
 .DS_Store
 .env
 .env.backup
 .phpunit.result.cache
+.phpcs_reports.txt
 Homestead.json
 Homestead.yaml
 npm-debug.log

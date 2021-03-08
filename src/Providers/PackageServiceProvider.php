@@ -33,15 +33,15 @@ class PackageServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'larapress');
-	    $this->loadRoutesFrom(__DIR__.'/../../routes/auth.php');
-	    $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
-	    $this->loadMigrationsFrom(__DIR__.'/../../migrations');
+        $this->loadRoutesFrom(__DIR__.'/../../routes/auth.php');
+        $this->loadRoutesFrom(__DIR__.'/../../routes/api.php');
+        $this->loadMigrationsFrom(__DIR__.'/../../migrations');
 
         $this->publishes([
             __DIR__.'/../../config/auth.php' => config_path('larapress/auth.php'),
         ], ['config', 'larapress', 'larapress-auth']);
 
-        Auth::provider('larapress', function($app, array $config) {
+        Auth::provider('larapress', function ($app, array $config) {
             return new MasterIdentifierUserProvider(app(IDomainRepository::class));
         });
     }

@@ -4,17 +4,16 @@ namespace Larapress\Auth\Signin;
 
 use Exception;
 use Illuminate\Auth\SessionGuard;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Larapress\CRUD\BaseFlags;
 use Larapress\CRUD\Exceptions\AppException;
 use Larapress\Profiles\Flags\UserFlags;
 use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Auth\StatefulGuard;
 
 class DomainSigninService implements ISigninService
 {
@@ -49,10 +48,11 @@ class DomainSigninService implements ISigninService
      */
     public function signinUser(string $username, string $password)
     {
+        $tokens = [];
         $guards = config('auth.guards');
         $request = Request::createFromGlobals();
         foreach ($guards as $guardName => $guardParams) {
-            /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
+            /** @var StatefulGuard $guard */
             $guard = Auth::guard($guardName);
             $token = $guard->attempt([
                 'username' => $username,
@@ -70,7 +70,7 @@ class DomainSigninService implements ISigninService
                     ];
                 }
                 if (!is_null($token)) {
-                    $guards[$guardName] = $token;
+                    $tokens[$guardName] = $token;
                 }
             } else {
                 throw new AppException(AppException::ERR_INVALID_CREDENTIALS);
@@ -90,7 +90,7 @@ class DomainSigninService implements ISigninService
         }
 
         return [
-            'tokens' => $guards,
+            'tokens' => $tokens,
             'user' => $user,
             'message' => trans('larapress::auth.signin.success')
         ];
@@ -103,7 +103,7 @@ class DomainSigninService implements ISigninService
     {
         $guards = config('auth.guards');
         foreach ($guards as $guardName => $guardParams) {
-            /** @var \Illuminate\Contracts\Auth\Guard|\Illuminate\Contracts\Auth\StatefulGuard $guard */
+            /** @var StatefulGuard $guard */
             $guard = Auth::guard($guardName);
             try {
                 $guard->logout();
@@ -121,7 +121,7 @@ class DomainSigninService implements ISigninService
     /**
      * Undocumented function
      *
-     * @param IProfileUser|ICRUDUser $user
+     * @param IProfileUser|Model $user
      * @param string $old
      * @param string $new
      * @return void

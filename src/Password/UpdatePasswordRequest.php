@@ -30,11 +30,13 @@ class UpdatePasswordRequest extends FormRequest
         ];
     }
 
-    public function getOldPassword() {
+    public function getOldPassword()
+    {
         return $this->request->get('old');
     }
 
-    public function getNewPassword() {
+    public function getNewPassword()
+    {
         return $this->request->get('password');
     }
 }

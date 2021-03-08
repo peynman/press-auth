@@ -58,7 +58,8 @@ class SignupEvent implements ShouldQueue
      *
      * @return IProfileUser
      */
-    public function getUser(): IProfileUser {
+    public function getUser(): IProfileUser
+    {
         return call_user_func([config('larapress.crud.user.class'), "find"], $this->userId);
     }
 
@@ -68,7 +69,8 @@ class SignupEvent implements ShouldQueue
      *
      * @return IProfileUser
      */
-    public function getIntroducer() {
+    public function getIntroducer()
+    {
         if (is_null($this->introducerId)) {
             return null;
         }

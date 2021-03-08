@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Larapress\ECommerce\IECommerceUser;
 use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Models\Domain;
+use Carbon\Carbon;
 
 class SigninEvent implements ShouldQueue
 {
@@ -23,6 +24,8 @@ class SigninEvent implements ShouldQueue
     public $ip;
     /** @var int */
     public $timestamp;
+    /** @var int */
+    public $userDaysAfterSignup;
 
     /**
      * Create a new event instance.
@@ -35,6 +38,7 @@ class SigninEvent implements ShouldQueue
     public function __construct(IECommerceUser $user, $domain, $ip, $timestamp)
     {
         $this->userId = $user->id;
+        $this->userDaysAfterSignup = Carbon::now()->diffInDays($user->created_at);
         $this->supportId = $user->getSupportUserId();
         $this->domainId = is_numeric($domain) || is_null($domain) ? $domain : $domain->id;
         $this->ip = $ip;
@@ -50,8 +54,8 @@ class SigninEvent implements ShouldQueue
         return is_null($this->domainId) ? null : Domain::find($this->domainId);
     }
 
-    public function getUser(): IProfileUser {
+    public function getUser(): IProfileUser
+    {
         return call_user_func([config('larapress.crud.user.class'), "find"], $this->userId);
     }
-
 }

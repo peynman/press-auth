@@ -6,7 +6,7 @@ use Larapress\Auth\Signin\SigninController;
 
 Route::middleware(config('larapress.crud.middlewares'))
     ->prefix(config('larapress.crud.prefix'))
-    ->group(function() {
+    ->group(function () {
         UpdatePasswordController::registerRoutes();
     });
 
