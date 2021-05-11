@@ -3,11 +3,11 @@
 namespace Larapress\Auth\Signup;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Larapress\CRUD\Services\IReportSource;
+use Larapress\CRUD\Services\CRUD\ICRUDReportSource;
 use Larapress\Reports\Services\IReportsService;
 use Larapress\Reports\Services\BaseReportSource;
 
-class SignupReport implements IReportSource, ShouldQueue
+class SignupReport implements ICRUDReportSource, ShouldQueue
 {
     use BaseReportSource;
 

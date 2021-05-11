@@ -7,46 +7,65 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 
 /**
- * @group User Authentication
- *
  * Sign in users based on their registration domain.
+ *
+ * @group Authentication
  */
 class SigninController extends Controller
 {
     public static function registerRoutes()
     {
-        Route::post('signin', '\\'.self::class.'@signin')
+        Route::post('signin', '\\' . self::class . '@signin')
             ->name('users.any.signin');
 
-        Route::any('logout', '\\'.self::class.'@logout')
+        Route::match([Request::METHOD_POST, Request::METHOD_GET], 'logout', '\\' . self::class . '@logout')
             ->name('users.any.logout');
     }
 
     public static function registerPublicWebRoutes()
     {
-        Route::any('logout', function (ISigninService $service) {
-            $service->logout();
-            return redirect('/');
-        });
-    }
-    /**
-     * @param ISigninService $service
-     * @param \Larapress\Auth\Signin\SigninRequest $request
-     * @return \Illuminate\Http\Response
-     * @throws \Larapress\Core\Exceptions\AppException
-     */
-    public function signin(ISigninService $service, SigninRequest $request)
-    {
-        return response()->json(array_merge($service->signin($request), [
-        ]));
+        Route::match([Request::METHOD_POST, Request::METHOD_GET], 'logout', '\\' . self::class . '@logoutWeb');
     }
 
     /**
+     * API Authenticate
+     *
      * @param ISigninService $service
+     * @param \Larapress\Auth\Signin\SigninRequest $request
+     *
+     * @return \Illuminate\Http\Response
+     *
+     * @throws Exception
+     *
+     * @unauthenticated
+     */
+    public function signin(ISigninService $service, SigninRequest $request)
+    {
+        return response()->json(array_merge($service->signin($request), []));
+    }
+
+    /**
+     * Logout API token
+     *
+     * @param ISigninService $service
+     *
      * @return \Illuminate\Http\Response
      */
-    public function logout(ISigninService $service, Request $request)
+    public function logout(ISigninService $service)
     {
         return response()->json($service->logout());
+    }
+
+    /**
+     * Logout Web user
+     *
+     * @param ISigninService $service
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function logoutWeb(ISigninService $service)
+    {
+        $service->logout();
+        return redirect('/');
     }
 }

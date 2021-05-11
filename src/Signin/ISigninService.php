@@ -3,23 +3,32 @@
 namespace Larapress\Auth\Signin;
 
 use Larapress\Profiles\IProfileUser;
+use Exception;
 
 interface ISigninService
 {
     /**
      * @param SigninRequest $request
-     * @param string $guard
+     *
      * @return \Larapress\Auth\Signin\SigninResponse
-     * @throws \Larapress\Core\Exceptions\AppException
+     *
+     * @throws Exception
      */
     public function signin(SigninRequest $request);
 
 
     /**
+     * Undocumented function
+     *
+     * @param string|Domain $domain
+     * @param string $username
+     * @param string $password
+     *
      * @return \Larapress\Auth\Signin\SigninResponse
-     * @throws \Larapress\Core\Exceptions\AppException
+     *
+     * @throws Exception
      */
-    public function signinUser(string $username, String $password);
+    public function signinUser($domain, string $username, string $password);
 
     /**
      * @return array
@@ -29,7 +38,7 @@ interface ISigninService
     /**
      * Undocumented function
      *
-     * @param IProfileUser|ICRUDUser $user
+     * @param IProfileUser $user
      * @param string $old
      * @param string $new
      * @return void

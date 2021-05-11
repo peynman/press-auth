@@ -41,7 +41,7 @@ class PackageServiceProvider extends ServiceProvider
             __DIR__.'/../../config/auth.php' => config_path('larapress/auth.php'),
         ], ['config', 'larapress', 'larapress-auth']);
 
-        Auth::provider('larapress', function ($app, array $config) {
+        Auth::provider('larapress', function () {
             return new MasterIdentifierUserProvider(app(IDomainRepository::class));
         });
     }

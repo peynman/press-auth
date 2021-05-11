@@ -1,6 +1,6 @@
 {
   "name": "peynman/larapress-auth",
-  "description": "Larapress default auth.",
+  "description": "Larapress domain based authentication.",
   "type": "library",
   "license": "MIT",
   "minimum-stability": "dev",
@@ -28,7 +28,7 @@
     }
   },
   "require": {
-    "php": "^7.3.0",
+    "php": "^7.0|^8.0",
     "laravel/framework": "^8.0",
     "tymon/jwt-auth": "^1.0.1",
     "peynman/larapress-profiles": "master",

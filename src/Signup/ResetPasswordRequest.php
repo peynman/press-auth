@@ -4,6 +4,14 @@ namespace Larapress\Auth\Signup;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Reset password request, this request is available after VerifyPhoneCheckRequest
+ *
+ * @queryParam phone required the phone number (account) to reset password for
+ * @queryParam password the new password
+ * @queryParam msg_id the verification sms id which is received from VerifyPhoneCheckRequest end point
+ *
+ */
 class ResetPasswordRequest extends FormRequest
 {
     /**
@@ -25,7 +33,8 @@ class ResetPasswordRequest extends FormRequest
     public function rules()
     {
         return [
-            'phone' => 'required|numeric|',
+            'email' => 'required_without:phone|email',
+            'phone' => 'required_without:email|numeric|regex:/(09)[0-9]{9}/',
             'password' => 'string|min:6|confirmed|required',
             'msg_id' => 'required|numeric|exists:sms_messages,id',
         ];
@@ -40,6 +49,16 @@ class ResetPasswordRequest extends FormRequest
     public function getPhone()
     {
         return $this->get('phone');
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->get('email');
     }
 
     /**

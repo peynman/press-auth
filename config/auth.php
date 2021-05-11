@@ -1,13 +1,7 @@
 <?php
 
 return [
-    'redirects' => [
-        'login' => '/signin',
-        'logout' => '/logout',
-        'home' => '/',
-        'signup' => '/signup',
-    ],
-
+    'prefix' => 'api',
     'middleware' => [
         'throttle:60,1',
         \App\Http\Middleware\EncryptCookies::class,
@@ -16,19 +10,22 @@ return [
         \Illuminate\Session\Middleware\AuthenticateSession::class,
     ],
 
-    'prefix' => 'api',
-
-    'routes' => [
-        'signin' => 'signin',
-        'signup' => 'signup',
+    'redirects' => [
+        'login' => '/signin',
+        'logout' => '/logout',
+        'home' => '/',
+        'signup' => '/signup',
     ],
 
-    // force 2 step (sms verification) on login for these accounts
-    'force_2_step_auth' => [
-        'super-role',
-        'accounting',
-        'studio-admin',
-        'sale-manager',
+    'auth_2_step' => [
+        'forced_roles' => [
+            'super-role',
+            'accounting',
+            'studio-admin',
+            'sale-manager',
+        ],
+        'use_sms' => true,
+        'use_email' => false,
     ],
 
     // limit active sessions for these accounts
@@ -39,13 +36,33 @@ return [
 
     'signup' => [
         'sms' => [
+            'enabled' => true,
             'numbers_only' => true,
             'code_len' => 6,
             'default_author' => 1,
             'default_gateway' => null,
         ],
 
+        'email' => [
+            'enabled' => false,
+            'numbers_only' => true,
+            'code_len' => 6,
+            'default_author' => 1,
+            'default_gateway' => null,
+        ],
+
+        'social' => [
+            'enabled' => false,
+            'providers' => [
+                'facebook',
+                'tweeter',
+                'github',
+                'google',
+            ],
+        ],
+
         'default_role' => null,
+        'default_domain' => null,
         'autofill_form' => null,
     ],
 ];

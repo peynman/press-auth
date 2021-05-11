@@ -4,7 +4,14 @@ namespace Larapress\Auth\Signup;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class VerifyPhoneCheckRequest extends FormRequest
+/**
+ * Validate Phone number with verification code sent
+ *
+ * @queryParam email required_without:phone the email
+ * @queryParam phone required_without:email the phone number with/without country code
+ * @queryParam code required the code recieved by sms
+ */
+class VerifyCheckRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +32,9 @@ class VerifyPhoneCheckRequest extends FormRequest
     public function rules()
     {
         return [
-            'phone' => 'required|numeric|regex:/(09)[0-9]{9}/',
-            'code' => 'required'
+            'email' => 'required_without:phone|email',
+            'phone' => 'required_without:email|numeric|regex:/(09)[0-9]{9}/',
+            'code' => 'required',
         ];
     }
 
@@ -40,6 +48,15 @@ class VerifyPhoneCheckRequest extends FormRequest
         return $this->get('phone');
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->Get('email');
+    }
 
     /**
      * Undocumented function

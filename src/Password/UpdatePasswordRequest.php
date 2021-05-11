@@ -4,6 +4,11 @@ namespace Larapress\Auth\Password;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @bodyProp old string required Old password.
+ * @bodyProp password string required New password.
+ * @bodyProp password_confirmation string required New password confirmed.
+ */
 class UpdatePasswordRequest extends FormRequest
 {
     /**
@@ -30,11 +35,21 @@ class UpdatePasswordRequest extends FormRequest
         ];
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
     public function getOldPassword()
     {
         return $this->request->get('old');
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
     public function getNewPassword()
     {
         return $this->request->get('password');

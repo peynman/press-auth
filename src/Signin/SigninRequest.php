@@ -6,6 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 use Larapress\CRUD\Exceptions\ValidationException;
 use Mews\Captcha\Facades\Captcha;
 
+/**
+ * Request params to sign in and receive an API Token
+ *
+ * @bodyParam username required the username/email/phone-number to use
+ * @bodyParam password required the password
+ * @bodyParam key required the captcha key received by visiting /siginin page (Captcha safe source)
+ * @bodyParam captcha required the captcha answer
+ */
 class SigninRequest extends FormRequest
 {
     /**
@@ -17,7 +25,6 @@ class SigninRequest extends FormRequest
     {
         return true;
     }
-
 
     /**
      * Get the validation rules that apply to the request.
@@ -35,10 +42,11 @@ class SigninRequest extends FormRequest
     }
 
     /**
-     * Undocumented function
+     * Override default validation exception and include a new captcha
      *
      * @param \Illuminate\Contracts\Validation\Validator $validator
-     * @return void
+     *
+     * @throws ValidationException
      */
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
@@ -47,6 +55,11 @@ class SigninRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return array
+     */
     public function getCredentials()
     {
         return [
@@ -55,11 +68,21 @@ class SigninRequest extends FormRequest
         ];
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
     public function getUsername()
     {
         return $this->request->get('username');
     }
 
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
     public function getPassword()
     {
         return $this->request->get('password');

@@ -6,6 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 use Larapress\Profiles\Models\Form;
 use Larapress\Profiles\Services\FormEntry\IFormEntryService;
 
+/**
+ * @bodyParam email string required_without:phone Email to use in registration form (should be verified already).
+ * @bodyParam phone string required_without:email Phone number to use in registration form (should be verified already).
+ * @bodyParam username string required Registration username.
+ * @bodyParam password string required Registration password.
+ * @bodyParam msg_id int required Verification message id (returned by phone/email verification endpoints).
+ * @bodyParam introducer_id int User id to attach as introducer.
+ * @bodyParam campaign_id int Form id to attach as registration campain.
+ */
 class SignupRequest extends FormRequest
 {
     /**
@@ -41,11 +50,13 @@ class SignupRequest extends FormRequest
         }
 
         return array_merge([
-            'phone' => 'required|numeric|exists:phone_numbers,number|digits:11',
+            'email' => 'required_without:phone|email|exists:emails,email',
+            'phone' => 'required_without:email|numeric|exists:phone_numbers,number|digits:11',
             'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-]+)(\d+)?$)/u',
-            'password' => 'string|min:6|confirmed|required',
+            'password' => 'required|string|min:6|confirmed',
             'msg_id' => 'required|numeric|exists:sms_messages,id',
             'introducer_id' => 'nullable|numeric|exists:users,id',
+            'campaign_id' => 'nullable|numeric|exits:forms,id',
         ], $formValidations);
     }
 
@@ -57,6 +68,16 @@ class SignupRequest extends FormRequest
     public function getPhone()
     {
         return $this->get('phone');
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->get('email');
     }
 
     /**

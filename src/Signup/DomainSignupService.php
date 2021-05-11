@@ -13,6 +13,7 @@ use Larapress\CRUD\BaseFlags;
 use Larapress\CRUD\Events\CRUDCreated;
 use Larapress\CRUD\Events\CRUDUpdated;
 use Larapress\CRUD\Exceptions\AppException;
+use Larapress\CRUD\Exceptions\RequestException;
 use Larapress\CRUD\Extend\Helpers;
 use Larapress\CRUD\Models\Role;
 use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
@@ -27,11 +28,75 @@ use Larapress\Profiles\Repository\Domain\IDomainRepository;
 use Larapress\Profiles\Services\FormEntry\IFormEntryService;
 use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Models\Form;
+use Laravel\Socialite\Facades\Socialite;
 
 class DomainSignupService implements ISignupService
 {
-    public function signupUserWithData($dbPhone, $domaiId, $username, $password)
+    /** @bar IDomainRepository */
+    protected $domainRepo;
+    /** @var ISigninService */
+    protected $signinService;
+    public function __construct(IDomainRepository $domainRepo, ISigninService $signinService)
     {
+        $this->domainRepo = $domainRepo;
+        $this->signinService = $signinService;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param Domain $domain
+     * @param string $username
+     * @param string $password
+     * @return IProfileUser
+     */
+    public function signupUserWithData($domain, $username, $password)
+    {
+        $userClass = config('larapress.crud.user.class');
+        /** @var IProfileUser */
+        $user = call_user_func([$userClass, 'create'], [
+            'name' => $username,
+            'password' => Hash::make($password)
+        ]);
+        $role = Role::find(config('larapress.auth.signup.default_role'));
+        if (is_null($role)) {
+            throw new AppException(AppException::ERR_OBJECT_NOT_FOUND, trans('larapress::auth.exceptions.no_customer_role'));
+        }
+
+        $user->roles()->attach($role);
+        $user->domains()->attach($domain, [
+            'flags' => UserDomainFlags::REGISTRATION_DOMAIN | UserDomainFlags::MEMBERSHIP_DOMAIN,
+        ]);
+
+        return $user;
+    }
+
+    public function fillSignupFormsForRegistrationRequest(IProfileUser $user, SignupRequest $request)
+    {
+        /** @var IFormEntryService */
+        $formService = app(IFormEntryService::class);
+        if (!is_null($request->get('campaign_id', null))) {
+            $formId = $request->get('campaign_id');
+            $formService->updateFormEntry(
+                $request,
+                $user,
+                $formId
+            );
+        }
+        if (!is_null(config('larapress.auth.signup.autofill_form'))) {
+            $formId = config('larapress.auth.signup.autofill_form');
+            $form = Form::find($formId);
+            if (!is_null($form)) {
+                $values = $request->get($form->name);
+                $formRequest = clone $request;
+                $formRequest->merge($values);
+                $formService->updateFormEntry(
+                    $formRequest,
+                    $user,
+                    $formId
+                );
+            }
+        }
     }
 
     /**
@@ -44,9 +109,8 @@ class DomainSignupService implements ISignupService
         $username = $request->getUsername();
         $password = $request->getPassword();
         $msgId = $request->getMessageID();
-        /** @var IDdomainRepository */
-        $domainRepo = app()->make(IDomainRepository::class);
-        $domain = $domainRepo->getCurrentRequestDomain();
+        $domain = $this->domainRepo->getRequestDomain($request);
+
         $dbPhone = PhoneNumber::query()
             ->where('number', $phone)
             ->where('domain_id', $domain->id)
@@ -55,18 +119,18 @@ class DomainSignupService implements ISignupService
 
         // reject early, if no active domain is found
         if (is_null($domain)) {
-            throw new Exception("Invalid domain");
+            throw new RequestException("Invalid domain");
         }
 
         // reject if there is no phone number record as verified
         if (is_null($dbPhone)) {
-            throw new Exception(trans('auth.phone_expired'));
+            throw new RequestException(trans('larapress::auth.exceptions.phone_expired'));
         }
 
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
         if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified') {
-            throw new Exception(trans('auth.phone_expired'));
+            throw new RequestException(trans('larapress::auth.exceptions.phone_expired'));
         }
 
         $user = null;
@@ -78,46 +142,15 @@ class DomainSignupService implements ISignupService
                 'data' => $data
             ]);
 
-            $userClass = config('larapress.crud.user.class');
-            /** @var IProfileUser */
-            $user = call_user_func([$userClass, 'create'], [
-                'name' => $username,
-                'password' => Hash::make($password)
-            ]);
+            $user = $this->signupUserWithData(
+                $domain,
+                $username,
+                $password
+            );
             $dbPhone->update([
                 'user_id' => $user->id,
             ]);
-
-            $role = Role::find(config('larapress.auth.signup.default_role'));
-            $user->roles()->attach($role);
-            $user->domains()->attach($domain, [
-                'flags' => UserDomainFlags::REGISTRATION_DOMAIN | UserDomainFlags::MEMBERSHIP_DOMAIN,
-            ]);
-
-            /** @var IFormEntryService */
-            $formService = app(IFormEntryService::class);
-            if (!is_null($request->get('campaign_id', null))) {
-                $formId = $request->get('campaign_id');
-                $formService->updateFormEntry(
-                    $request,
-                    $user,
-                    $formId
-                );
-            }
-            if (!is_null(config('larapress.auth.signup.autofill_form'))) {
-                $formId = config('larapress.auth.signup.autofill_form');
-                $form = Form::find($formId);
-                if (!is_null($form)) {
-                    $values = $request->get($form->name);
-                    $formRequest = clone $request;
-                    $formRequest->merge($values);
-                    $formService->updateFormEntry(
-                        $formRequest,
-                        $user,
-                        $formId
-                    );
-                }
-            }
+            $this->fillSignupFormsForRegistrationRequest($user, $request);
 
             $now = Carbon::now();
             CRUDCreated::dispatch($user, $user, UserCRUDProvider::class, $now);
@@ -125,9 +158,7 @@ class DomainSignupService implements ISignupService
             SignupEvent::dispatch($user, $domain, $request->getIntroducerID(), $request->ip(), time());
         });
 
-        /** @var ISigninService */
-        $signinService = app()->make(ISigninService::class);
-        return $signinService->signinUser($dbPhone->number, $password);
+        return $this->signinService->signinUser($domain, $dbPhone->number, $password);
     }
 
     /**
@@ -140,9 +171,7 @@ class DomainSignupService implements ISignupService
      */
     public function resetWithPhoneNumber(Request $request, string $phone, string $msgId, string $password)
     {
-        /** @var IDdomainRepository */
-        $domainRepo = app()->make(IDomainRepository::class);
-        $domain = $domainRepo->getCurrentRequestDomain();
+        $domain = $this->domainRepo->getRequestDomain($request);
         $dbPhone = PhoneNumber::query()
             ->with(['user'])
             ->where('number', $phone)
@@ -152,13 +181,13 @@ class DomainSignupService implements ISignupService
 
         // reject if there is no phone number record as verified
         if (is_null($dbPhone)) {
-            throw new Exception(trans('auth.phone_expired'));
+            throw new RequestException(trans('larapress::auth.exceptions.phone_expired'));
         }
 
         // reject if verification was more than 5 minutes ago
         $smsMessage = SMSMessage::find($msgId);
         if (is_null($dbPhone) || $smsMessage->data['mode'] !== 'verified') {
-            throw new Exception(trans('auth.phone_expired'));
+            throw new RequestException(trans('larapress::auth.exceptions.phone_expired'));
         }
 
         // update & reset password
@@ -183,27 +212,25 @@ class DomainSignupService implements ISignupService
             );
         }
 
-        /** @var ISigninService */
-        $signinService = app()->make(ISigninService::class);
-        return $signinService->signinUser($dbPhone->user->name, $password);
+        return $this->signinService->signinUser($domain, $dbPhone->user->name, $password);
     }
 
     /**
      * Undocumented function
      *
      * @param String $phone
-     * @return bool
+     * @param Domain|string $domain
+     *
+     * @return array
      */
-    public function sendPhoneVerifySMS(string $phone)
+    public function sendPhoneVerifySMS(string $phone, $domain)
     {
-        /** @var IDdomainRepository */
-        $domainRepo = app()->make(IDomainRepository::class);
-        $domain = $domainRepo->getCurrentRequestDomain();
+        $domain = $this->domainRepo->getCurrentRequestDomain();
 
         $gateway = SMSGatewayData::find(config('larapress.auth.signup.sms.default_gateway'));
 
         if (is_null($gateway)) {
-            throw new Exception(trans('larapress::auth.exceptions.no_gateway'));
+            throw new AppException(AppException::ERR_OBJECT_NOT_FOUND, trans('larapress::auth.exceptions.no_gateway'));
         }
 
         if (config('larapress.auth.signup.sms.numbers_only', true)) {
@@ -228,11 +255,11 @@ class DomainSignupService implements ISignupService
             ]
         ]);
 
+        $now = Carbon::now();
         $dbPhone = PhoneNumber::where('number', $phone)
             ->where('domain_id', $domain->id)
             ->first();
 
-        $now = Carbon::now();
         if (is_null($dbPhone)) {
             $dbPhone = PhoneNumber::create([
                 'number' => $phone,
@@ -255,7 +282,8 @@ class DomainSignupService implements ISignupService
      *
      * @param String $phone
      * @param String $code
-     * @return bool
+     *
+     * @return array
      */
     public function verifyPhoneSMS(string $phone, string $code)
     {
@@ -281,13 +309,15 @@ class DomainSignupService implements ISignupService
             CRUDUpdated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, Carbon::now());
 
             return [
-                'message' => $isValid ? trans('larapress::auth.signup.messages.verify_success') : trans('larapress::auth.signup.messages.verify_failed'),
+                'message' => $isValid ?
+                    trans('larapress::auth.signup.messages.verify_success') :
+                    trans('larapress::auth.signup.messages.verify_failed'),
                 'status' => $isValid,
                 'msg_id' => $smsMessage->id,
             ];
         }
 
-        throw new AppException(AppException::ERR_INVALID_QUERY);
+        throw new RequestException(trans('larapress::auth.signup.messages.verify_failed'));
     }
 
 
@@ -296,25 +326,26 @@ class DomainSignupService implements ISignupService
      *
      * @param String $phone
      * @param String $code
+     * @param Domain|int $domain
+     *
      * @return array
      */
-    public function resolveSignUpWithPhoneVerifySMS(string $phone, string $code)
+    public function resolveSignUpWithPhoneVerifySMS(string $phone, string $code, $domain)
     {
-        $valid = $this->verifyPhoneSMS($phone, $code);
+        if (is_object($domain)) { $domain = $domain->id; }
+
+        $valid = $this->verifyPhoneSMS($phone, $code, $domain);
         if ($valid['status']) {
-            /** @var IDomainRepository */
-            $domainRepo = app()->make(IDomainRepository::class);
-            $currDomain = $domainRepo->getCurrentRequestDomain();
             $dbPhone = PhoneNumber::with('user')
                 ->where('number', $phone)
-                ->where('domain_id', $currDomain->id)
+                ->where('domain_id', $domain)
                 ->first();
             if (is_null($dbPhone) || is_null($dbPhone->user)) { // phone number does not exists in our database in current domain
                 if (is_null($dbPhone)) {
                     $dbPhone = PhoneNumber::create([
                         'number' => $phone,
                         'user_id' => null,
-                        'domain_id' => $currDomain->id,
+                        'domain_id' => $domain,
                         'flags' => PhoneNumber::FLAGS_VERIFIED,
                     ]);
                 } elseif (!BaseFlags::isActive($dbPhone->flags, PhoneNumber::FLAGS_VERIFIED)) {
@@ -332,16 +363,18 @@ class DomainSignupService implements ISignupService
             }
         }
 
-        throw new AppException(AppException::ERR_INVALID_PARAMS);
+        throw new RequestException(trans('larapress::auth.signup.messages.verify_failed'));
     }
 
     /**
      * Undocumented function
      *
      * @param String $email
-     * @return void
+     * @param Domain|string $domain
+     *
+     * @return array
      */
-    public function sendEmailVerify(string $email)
+    public function sendEmailVerify(string $email, $domain)
     {
     }
 
@@ -350,9 +383,43 @@ class DomainSignupService implements ISignupService
      *
      * @param String $email
      * @param String $code
-     * @return void
+     * @param Domain|string $domain
+     *
+     * @return array
      */
     public function verifyEmail(string $email, string $code)
     {
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $driver
+
+     * @return void
+     */
+    public function verifySocialite(string $driver)
+    {
+        $drivers = array_keys(config('larapress.auth.signup.socialite'));
+        if (in_array($driver, $drivers)) {
+            $d = Socialite::driver($driver);
+            if (isset($drivers[$driver]['scopes'])) {
+                $d->setScopes($drivers[$driver]['scopes']);
+            }
+
+            return $d->redirect();
+        } else {
+            throw new AppException(AppException::ERR_INVALID_SIGNUP_DRIVER);
+        }
+    }
+
+    public function signupWithSocialiteDriver(string $driver)
+    {
+        $drivers = array_keys(config('larapress.auth.signup.socialite'));
+        if (in_array($driver, $drivers)) {
+            $user = Socialite::driver($driver)->user();
+        } else {
+            throw new AppException(AppException::ERR_INVALID_SIGNUP_DRIVER);
+        }
     }
 }
