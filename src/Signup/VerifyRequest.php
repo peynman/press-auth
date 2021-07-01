@@ -40,7 +40,7 @@ class VerifyRequest extends FormRequest
             'phone' => 'required_without:email|numeric|regex:/(09)[0-9]{9}/|digits:11',
             'key' => 'required|string',
             'captcha' => 'required|captcha_api:'.$this->request->get('key').',default',
-            'accept_terms' => 'required|boolean|in:1,true',
+            'accept_terms' => 'required|in:1,true',
         ];
     }
 

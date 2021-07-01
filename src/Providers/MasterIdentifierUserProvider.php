@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Larapress\Profiles\Flags\UserDomainFlags;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
+use Larapress\CRUD\ICRUDUser;
+use Illuminate\Database\Eloquent\Model;
 
 class MasterIdentifierUserProvider implements UserProvider
 {
@@ -35,7 +37,7 @@ class MasterIdentifierUserProvider implements UserProvider
      */
     public function retrieveById($identifier)
     {
-        $userClass = config('larapress.crud.user.class');
+        $userClass = config('larapress.crud.user.model');
         return $userClass::find($identifier);
     }
 
@@ -49,7 +51,7 @@ class MasterIdentifierUserProvider implements UserProvider
      */
     public function retrieveByToken($identifier, $token)
     {
-        $userClass = config('larapress.crud.user.class');
+        $userClass = config('larapress.crud.user.model');
         return $userClass::where('id', $identifier)->where('remember_token', $token)->first();
     }
 
@@ -63,6 +65,7 @@ class MasterIdentifierUserProvider implements UserProvider
      */
     public function updateRememberToken(Authenticatable $user, $token)
     {
+        /** @var Model $user */
         $user->update([
             'remember_token' => $token,
         ]);
@@ -81,7 +84,7 @@ class MasterIdentifierUserProvider implements UserProvider
         $query = null;
         $user = null;
 
-        $userClass = config('larapress.crud.user.class');
+        $userClass = config('larapress.crud.user.model');
         $domain = $this->domainRepository->getCurrentRequestDomain();
         $query = $userClass::where(function ($q) use ($domain) {
             if (!is_null($domain)) {
@@ -90,7 +93,7 @@ class MasterIdentifierUserProvider implements UserProvider
                 });
             }
             $q->orWhereHas('roles', function ($q) {
-                $q->whereIn('name', config('larapress.profiles.security.roles.super-role'));
+                $q->whereIn('name', config('larapress.profiles.security.roles.super_role'));
             });
         });
 
@@ -117,11 +120,14 @@ class MasterIdentifierUserProvider implements UserProvider
     public function validateCredentials(Authenticatable $user, array $credentials)
     {
         if (isset($credentials['password'])) {
-            if (!is_null(config('larapress.crud.user.master_customer_password'))) {
-                if ($credentials['password'] === config('larapress.crud.user.master_customer_password')) {
-                    $customerRoles = array_merge(config('larapress.profiles.security.roles.customer'), config('larapress.profiles.security.roles.affiliate'));
-                    if ($user->hasRole($customerRoles)) {
-                        return true;
+            if (!is_null(config('larapress.auth.master_password.password'))) {
+                if ($credentials['password'] === config('larapress.auth.master_password.password')) {
+                    $customerRoles = config('lararpess.auth.master_password.roles');
+                    if (!is_null($customerRoles)) {
+                        /** @var ICRUDUser $user */
+                        if ($user->hasRole($customerRoles)) {
+                            return true;
+                        }
                     }
                 }
             }

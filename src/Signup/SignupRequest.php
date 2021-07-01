@@ -49,15 +49,21 @@ class SignupRequest extends FormRequest
             }
         }
 
-        return array_merge([
+        $rules = array_merge([
             'email' => 'required_without:phone|email|exists:emails,email',
-            'phone' => 'required_without:email|numeric|exists:phone_numbers,number|digits:11',
-            'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-]+)(\d+)?$)/u',
+            'phone' => 'required_without:email|numeric|exists:phone_numbers,number',
+            'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-\.]+)(\d+)?$)/u',
             'password' => 'required|string|min:6|confirmed',
             'msg_id' => 'required|numeric|exists:sms_messages,id',
             'introducer_id' => 'nullable|numeric|exists:users,id',
             'campaign_id' => 'nullable|numeric|exits:forms,id',
         ], $formValidations);
+
+        if (!is_null(config('larapress.auth.signup.sms.phone_digits'))) {
+            $rules['phone'] .= '|digits:'.config('larapress.auth.signup.sms.phone_digits');
+        }
+
+        return $rules;
     }
 
     /**

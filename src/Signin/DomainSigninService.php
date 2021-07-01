@@ -2,6 +2,7 @@
 
 namespace Larapress\Auth\Signin;
 
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\Request;
@@ -93,7 +94,7 @@ class DomainSigninService implements ISigninService
                 throw new RequestException(trans('larapress::auth.exceptions.banned'));
             }
 
-            SigninEvent::dispatch($user, $domain, $request->ip(), time());
+            SigninEvent::dispatch($user, $domain, $request->ip(), Carbon::now());
         }
 
         return [

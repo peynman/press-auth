@@ -2,7 +2,7 @@
 
 namespace Larapress\Auth\Repository;
 
-use Larapress\Reports\Services\IReportsService;
+use Larapress\Reports\Services\Reports\IReportsService;
 
 class SignupReportRepository implements ISignupReportRepository
 {

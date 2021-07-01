@@ -3,10 +3,10 @@
 namespace Larapress\Auth\Tests\Feature;
 
 use App\Models\User;
-use Larapress\CRUD\Tests\PackageTestApplication;
+use Larapress\CRUD\Tests\CustomerTestApplication;
 use Larapress\Notifications\Models\SMSMessage;
 
-class CustomerRegisterTest extends PackageTestApplication
+class CustomerRegisterTest extends CustomerTestApplication
 {
     /**
      * @return void
@@ -127,6 +127,6 @@ class CustomerRegisterTest extends PackageTestApplication
 
         $customer = User::with(['roles', 'domains', 'phones', 'emails'])->find($response['user']['id']);
         $this->assertNotNull($customer);
-        $this->assertEquals($customer->roles[0]->id, config('larapress.profiles.customer_role_id'));
+        $this->assertEquals($customer->roles[0]->id, config('larapress.auth.signup.default_role'));
     }
 }

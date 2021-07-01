@@ -52,7 +52,7 @@ class DomainSignupService implements ISignupService
      */
     public function signupUserWithData($domain, $username, $password)
     {
-        $userClass = config('larapress.crud.user.class');
+        $userClass = config('larapress.crud.user.model');
         /** @var IProfileUser */
         $user = call_user_func([$userClass, 'create'], [
             'name' => $username,
@@ -71,6 +71,14 @@ class DomainSignupService implements ISignupService
         return $user;
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param IProfileUser $user
+     * @param SignupRequest $request
+     *
+     * @return void
+     */
     public function fillSignupFormsForRegistrationRequest(IProfileUser $user, SignupRequest $request)
     {
         /** @var IFormEntryService */
@@ -155,7 +163,7 @@ class DomainSignupService implements ISignupService
             $now = Carbon::now();
             CRUDCreated::dispatch($user, $user, UserCRUDProvider::class, $now);
             CRUDUpdated::dispatch($user, $dbPhone, PhoneNumberCRUDProvider::class, $now);
-            SignupEvent::dispatch($user, $domain, $request->getIntroducerID(), $request->ip(), time());
+            SignupEvent::dispatch($user, $domain, $request->getIntroducerID(), $request->ip(), $now);
         });
 
         return $this->signinService->signinUser($domain, $dbPhone->number, $password);
@@ -319,7 +327,6 @@ class DomainSignupService implements ISignupService
 
         throw new RequestException(trans('larapress::auth.signup.messages.verify_failed'));
     }
-
 
     /**
      * Undocumented function

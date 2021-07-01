@@ -2,9 +2,9 @@
 
 namespace Larapress\Auth\Tests\Feature;
 
-use Larapress\CRUD\Tests\PackageTestApplication;
+use Larapress\CRUD\Tests\CustomerTestApplication;
 
-class AdminSigninTest extends PackageTestApplication
+class AdminSigninTest extends CustomerTestApplication
 {
     /**
      * A basic test example.

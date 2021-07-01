@@ -4,46 +4,65 @@ namespace Larapress\Auth\Signup;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Larapress\CRUD\Services\CRUD\ICRUDReportSource;
-use Larapress\Reports\Services\IReportsService;
-use Larapress\Reports\Services\BaseReportSource;
+use Larapress\Reports\Services\Reports\IReportsService;
+use Larapress\Reports\Services\Reports\ReportSourceTrait;
+use Larapress\Reports\Services\Reports\IMetricsService;
+use Larapress\Reports\Services\Reports\MetricsSourceProperties;
 
 class SignupReport implements ICRUDReportSource, ShouldQueue
 {
-    use BaseReportSource;
+    const MEASUREMENT_TYPE = 'signup';
+
+    use ReportSourceTrait;
 
     /** @var IReportsService */
     private $reports;
 
+    /** @var IMetricsService */
+    private $metrics;
+
     /** @var array */
     private $avReports;
 
-    public function __construct(IReportsService $reports)
+    // start dot groups from 1 position_1.position_2.position_3...
+    private $metricsDotGroups = [
+        'user' => 2,
+        'domain' => 'domain_id',
+    ];
+
+    public function __construct()
     {
-        $this->reports = $reports;
+        /** @var IReportsService */
+        $this->reports = app(IReportsService::class);
+        /** @var IMetricsService */
+        $this->metrics = app(IMetricsService::class);
+
         $this->avReports = [
-            'users.signup.total' => function ($user, array $options = []) {
-                [$filters, $fromC, $toC, $groups] = $this->getCommonReportProps($user, $options);
-                return $this->reports->queryMeasurement(
-                    'user.signup',
-                    $filters,
-                    $groups,
-                    array_merge(["_value"], $groups),
-                    $fromC,
-                    $toC,
-                    'count()'
+            'metrics.total.signup' => function ($user, array $options = []) {
+                $props = MetricsSourceProperties::fromReportSourceOptions($user, $options, $this->metricsDotGroups);
+                return $this->metrics->queryMeasurement(
+                    'users\.[0-9]*\.signup$',
+                    self::MEASUREMENT_TYPE,
+                    null,
+                    $props->filters,
+                    $props->groups,
+                    $props->domains,
+                    $props->from,
+                    $props->to
                 );
             },
-            'users.signup.windowed' => function ($user, array $options = []) {
-                [$filters, $fromC, $toC, $groups] = $this->getCommonReportProps($user, $options);
-                $window = isset($options['window']) ? $options['window'] : '1h';
-                return $this->reports->queryMeasurement(
-                    'user.signup',
-                    $filters,
-                    $groups,
-                    array_merge(["_value", "_time"], $groups),
-                    $fromC,
-                    $toC,
-                    'aggregateWindow(every: '.$window.', fn: sum)'
+            'metrics.windowed.signup' => function ($user, array $options = []) {
+                $props = MetricsSourceProperties::fromReportSourceOptions($user, $options, $this->metricsDotGroups);
+                return $this->metrics->aggregateMeasurement(
+                    'users\.[0-9]*\.signup$',
+                    self::MEASUREMENT_TYPE,
+                    null,
+                    $props->filters,
+                    $props->groups,
+                    $props->domains,
+                    $props->from,
+                    $props->to,
+                    $props->window
                 );
             }
         ];
@@ -57,11 +76,23 @@ class SignupReport implements ICRUDReportSource, ShouldQueue
      */
     public function handle(SignupEvent $event)
     {
-        $tags = [
-            'domain' => $event->domainId,
-            'support' => $event->supportId,
-            'user' => $event->userId,
-        ];
-        $this->reports->pushMeasurement('user.signup', 1, $tags, [], $event->timestamp);
+        if (config('larapress.reports.reports.reports_service')) {
+            $tags = [
+                'domain' => $event->domainId,
+                'user' => $event->userId,
+            ];
+            $this->reports->pushMeasurement('users.signup', 1, $tags, [], $event->timestamp);
+        }
+
+        if (config('larapress.reports.reports.metrics_table')) {
+            $this->metrics->pushMeasurement(
+                $event->domainId,
+                self::MEASUREMENT_TYPE,
+                'user:'.$event->userId,
+                'users.'.$event->userId.'.signup',
+                1,
+                $event->timestamp
+            );
+        }
     }
 }
