@@ -36,7 +36,7 @@ class ResetPasswordRequest extends FormRequest
             'email' => 'required_without:phone|email',
             'phone' => 'required_without:email|numeric|regex:/(09)[0-9]{9}/',
             'password' => 'string|min:6|confirmed|required',
-            'msg_id' => 'required|numeric|exists:sms_messages,id',
+            'msgId' => 'required|numeric|exists:sms_messages,id',
         ];
     }
 
@@ -78,6 +78,6 @@ class ResetPasswordRequest extends FormRequest
      */
     public function getMessageID()
     {
-        return $this->get('msg_id');
+        return $this->get('msgId');
     }
 }

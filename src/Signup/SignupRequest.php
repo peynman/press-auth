@@ -54,9 +54,9 @@ class SignupRequest extends FormRequest
             'phone' => 'required_without:email|numeric|exists:phone_numbers,number',
             'username' => 'required|string|min:6|max:255|unique:users,name|regex:/(^([a-zA-Z0-9\_\-\.]+)(\d+)?$)/u',
             'password' => 'required|string|min:6|confirmed',
-            'msg_id' => 'required|numeric|exists:sms_messages,id',
-            'introducer_id' => 'nullable|numeric|exists:users,id',
-            'campaign_id' => 'nullable|numeric|exits:forms,id',
+            'msgId' => 'required|numeric|exists:sms_messages,id',
+            'introducerId' => 'nullable|numeric|exists:users,id',
+            'campaignId' => 'nullable|numeric|exits:forms,id',
         ], $formValidations);
 
         if (!is_null(config('larapress.auth.signup.sms.phone_digits'))) {
@@ -113,7 +113,7 @@ class SignupRequest extends FormRequest
      */
     public function getMessageID()
     {
-        return $this->get('msg_id');
+        return $this->get('msgId');
     }
 
     /**
@@ -123,6 +123,6 @@ class SignupRequest extends FormRequest
      */
     public function getIntroducerID()
     {
-        return $this->get('introducer_id');
+        return $this->get('introducerId');
     }
 }

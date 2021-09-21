@@ -12,16 +12,16 @@ use Illuminate\Support\Facades\Route;
  */
 class SignupEmailController extends Controller
 {
-    public static function registerRoutes()
+    public static function registerPublicApiRoutes()
     {
         // email based verification
-        Route::post('signup/email/verify', '\\'.self::class.'@sendEmailVerifyCode')
+        Route::post('signup/email/verify', '\\' . self::class . '@sendEmailVerifyCode')
             ->name('user.any.signup.email.verify');
-        Route::post('signup/email/check/resolve', '\\'.self::class.'@resolveEmailVerifyCode')
+        Route::post('signup/email/check/resolve', '\\' . self::class . '@resolveEmailVerifyCode')
             ->name('user.any.signup.email.resolve');
-        Route::post('signup/email/check/register', '\\'.self::class.'@registerEmailVerifyCode')
+        Route::post('signup/email/check/register', '\\' . self::class . '@registerEmailVerifyCode')
             ->name('user.any.signup.email.register');
-        Route::post('signup/email/check/reset', '\\'.self::class.'@resetPasswordEmailVerifyCode')
+        Route::post('signup/email/check/reset', '\\' . self::class . '@resetPasswordEmailVerifyCode')
             ->name('user.any.signup.email.reset');
     }
 

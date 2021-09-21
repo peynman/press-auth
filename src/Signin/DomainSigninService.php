@@ -7,14 +7,17 @@ use Exception;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Larapress\CRUD\BaseFlags;
 use Larapress\Profiles\Flags\UserFlags;
-use Larapress\Profiles\IProfileUser;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Larapress\CRUD\Exceptions\RequestException;
+use Larapress\CRUD\Services\CRUD\ICRUDService;
+use Larapress\Profiles\Services\ProfileUser\IProfileUserServices;
+use Larapress\Profiles\Services\ProfileUser\ProfileUserQueryRequest;
+use Mews\Captcha\Facades\Captcha;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Larapress\Profiles\IProfileUser;
 
 class DomainSigninService implements ISigninService
 {
@@ -57,7 +60,9 @@ class DomainSigninService implements ISigninService
      */
     public function signinUser($domain, string $username, string $password)
     {
-        if (is_object($domain)) { $domain = $domain->id; }
+        if (is_object($domain)) {
+            $domain = $domain->id;
+        }
 
         $tokens = [];
         $guards = config('auth.guards');
@@ -84,18 +89,25 @@ class DomainSigninService implements ISigninService
                     $tokens[$guardName] = $token;
                 }
             } else {
-                throw new RequestException(trans('larapress::auth.exceptions.invalid_credentials'));
+                throw new RequestException(trans('larapress::auth.exceptions.invalid_credentials'), 400, [
+                    'captcha' => Captcha::create('default', true),
+                ]);
             }
         }
+
+        /** @var IProfileUser */
         $user =  Auth::user();
-
-        if (!is_null($user)) {
-            if (BaseFlags::isActive($user->flags, UserFlags::BANNED)) {
-                throw new RequestException(trans('larapress::auth.exceptions.banned'));
-            }
-
-            SigninEvent::dispatch($user, $domain, $request->ip(), Carbon::now());
+        if (BaseFlags::isActive($user->flags, UserFlags::BANNED)) {
+            throw new RequestException(trans('larapress::auth.exceptions.banned'), 400, [
+                'captcha' => Captcha::create('default', true),
+            ]);
         }
+
+        SigninEvent::dispatch($user, $domain, $request->ip(), Carbon::now());
+
+        /** @var IProfileUserServices */
+        $service = app(IProfileUserServices::class);
+        $user = $service->userDetails($user);
 
         return [
             'tokens' => $tokens,
@@ -125,23 +137,17 @@ class DomainSigninService implements ISigninService
         ];
     }
 
-
     /**
      * Undocumented function
      *
-     * @param IProfileUser|Model $user
-     * @param string $old
-     * @param string $new
-     * @return void
+     * @return array
      */
-    public function updatePassword($user, string $old, string $new)
+    public function refreshToken()
     {
-        if (Hash::check($old, $user->password)) {
-            $user->update([
-                'password' => Hash::make($new),
-            ]);
-        } else {
-            throw new RequestException(trans('larapress::auth.exceptions.invalid_password'));
-        }
+        return [
+            'tokens' => [
+                'api' => JWTAuth::refresh(JWTAuth::getToken()),
+            ],
+        ];
     }
 }

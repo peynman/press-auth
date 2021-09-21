@@ -13,7 +13,7 @@ use Larapress\Profiles\Repository\Domain\IDomainRepository;
  */
 class SignupSMSController extends Controller
 {
-    public static function registerRoutes()
+    public static function registerPublicApiRoutes()
     {
         // sms based verification
         Route::post('signup/sms/verify', '\\' . self::class . '@sendSMSVerifyCode')

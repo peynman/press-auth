@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Route;
  */
 class SignupSocialController extends Controller
 {
-    public static function registerRoutes()
+    public static function registerPublicApiRoutes()
     {
         // socialite verification
-        Route::get('signup/socialite/verify/{driver}', '\\'.self::class.'@sendToSocialiteDriver')
+        Route::get('signup/socialite/verify/{driver}', '\\' . self::class . '@sendToSocialiteDriver')
             ->name('user.any.signup.socialite.verify');
     }
 

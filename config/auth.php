@@ -5,7 +5,7 @@ return [
     'prefix' => 'api',
 
     // auth middlewares
-    'middleware' => [
+    'middlewares' => [
         'throttle:60,1',
         \App\Http\Middleware\EncryptCookies::class,
         \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,

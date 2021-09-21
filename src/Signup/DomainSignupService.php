@@ -321,7 +321,7 @@ class DomainSignupService implements ISignupService
                     trans('larapress::auth.signup.messages.verify_success') :
                     trans('larapress::auth.signup.messages.verify_failed'),
                 'status' => $isValid,
-                'msg_id' => $smsMessage->id,
+                'msgId' => $smsMessage->id,
             ];
         }
 

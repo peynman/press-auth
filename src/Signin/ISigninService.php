@@ -10,7 +10,7 @@ interface ISigninService
     /**
      * @param SigninRequest $request
      *
-     * @return \Larapress\Auth\Signin\SigninResponse
+     * @return array
      *
      * @throws Exception
      */
@@ -24,7 +24,7 @@ interface ISigninService
      * @param string $username
      * @param string $password
      *
-     * @return \Larapress\Auth\Signin\SigninResponse
+     * @return array
      *
      * @throws Exception
      */
@@ -38,10 +38,7 @@ interface ISigninService
     /**
      * Undocumented function
      *
-     * @param IProfileUser $user
-     * @param string $old
-     * @param string $new
-     * @return void
+     * @return array
      */
-    public function updatePassword($user, string $old, string $new);
+    public function refreshToken();
 }

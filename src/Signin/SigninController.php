@@ -13,11 +13,17 @@ use Illuminate\Support\Facades\Route;
  */
 class SigninController extends Controller
 {
-    public static function registerRoutes()
+    public static function registerPublicApiRoutes()
     {
         Route::post('signin', '\\' . self::class . '@signin')
             ->name('users.any.signin');
 
+        Route::post('signin/refresh-token', '\\' . self::class . '@refreshToken')
+            ->name('users.any.refresh');
+    }
+
+    public static function registerApiRoutes()
+    {
         Route::match([Request::METHOD_POST, Request::METHOD_GET], 'logout', '\\' . self::class . '@logout')
             ->name('users.any.logout');
     }
@@ -41,7 +47,7 @@ class SigninController extends Controller
      */
     public function signin(ISigninService $service, SigninRequest $request)
     {
-        return response()->json(array_merge($service->signin($request), []));
+        return $service->signin($request);
     }
 
     /**
@@ -53,7 +59,7 @@ class SigninController extends Controller
      */
     public function logout(ISigninService $service)
     {
-        return response()->json($service->logout());
+        return $service->logout();
     }
 
     /**
@@ -67,5 +73,17 @@ class SigninController extends Controller
     {
         $service->logout();
         return redirect('/');
+    }
+
+    /**
+     * Refresh JWT token
+     *
+     * @param ISigninService $service
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function refreshToken(ISigninService $service)
+    {
+        return $service->refreshToken();
     }
 }
