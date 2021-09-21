@@ -85,5 +85,7 @@ return [
         'default_domain' => null,
         // form id to fill automatically when a customer has registered
         'autofill_form' => null,
+        // the user have to accept terms & cond
+        'should_accept_terms' => true,
     ],
 ];
