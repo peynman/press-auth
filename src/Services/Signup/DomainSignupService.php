@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Larapress\Auth\Services\Signup\Requests\SignupRequest;
-use Larapress\Auth\Signin\ISigninService;
+use Larapress\Auth\Services\Signin\ISigninService;
 use Larapress\CRUD\BaseFlags;
 use Larapress\CRUD\Events\CRUDCreated;
 use Larapress\CRUD\Events\CRUDUpdated;
