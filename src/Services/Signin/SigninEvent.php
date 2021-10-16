@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Services\Signin;
 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -17,12 +17,16 @@ class SigninEvent implements ShouldQueue
     public $userId;
     /** @var int */
     public $domainId;
-    /** @var string */
-    public $ip;
     /** @var int */
     public $timestamp;
     /** @var int */
     public $userDaysAfterSignup;
+    /** @var string */
+    public $requestAgent;
+    /** @var string */
+    public $requestIp;
+    /** @var string */
+    public $requestClientType;
 
     /**
      * Create a new event instance.
@@ -32,13 +36,15 @@ class SigninEvent implements ShouldQueue
      * @param $ip
      * @param $timestamp
      */
-    public function __construct(IECommerceUser $user, $domain, $ip, $timestamp)
+    public function __construct(IECommerceUser $user, $domain, $ip, $agent, $client, $timestamp)
     {
         $this->userId = $user->id;
         $this->userDaysAfterSignup = Carbon::now()->diffInDays($user->created_at);
         $this->domainId = is_numeric($domain) || is_null($domain) ? $domain : $domain->id;
-        $this->ip = $ip;
         $this->timestamp = is_numeric($timestamp) ? $timestamp : $timestamp->getTimestamp();
+        $this->requestIp = $ip;
+        $this->requestClientType = $client;
+        $this->requestAgent = $agent;
     }
 
     /**

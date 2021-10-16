@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Services\Signin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;

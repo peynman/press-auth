@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signup;
+namespace Larapress\Auth\Services\Signup;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;

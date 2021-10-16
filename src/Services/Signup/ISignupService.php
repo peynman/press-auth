@@ -1,8 +1,9 @@
 <?php
 
-namespace Larapress\Auth\Signup;
+namespace Larapress\Auth\Services\Signup;
 
 use Illuminate\Http\Request;
+use Larapress\Auth\Services\Signup\Requests\SignupRequest;
 use Larapress\Profiles\Models\Domain;
 
 interface ISignupService

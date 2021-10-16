@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signup;
+namespace Larapress\Auth\Services\Signup\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Larapress\Profiles\Models\Form;

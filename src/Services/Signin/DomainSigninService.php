@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Services\Signin;
 
 use Carbon\Carbon;
 use Exception;
@@ -103,7 +103,14 @@ class DomainSigninService implements ISigninService
             ]);
         }
 
-        SigninEvent::dispatch($user, $domain, $request->ip(), Carbon::now());
+        SigninEvent::dispatch(
+            $user,
+            $domain,
+            $request->ip(),
+            $request->userAgent(),
+            $request->get('client', 'web'),
+            Carbon::now()
+        );
 
         /** @var IProfileUserServices */
         $service = app(IProfileUserServices::class);

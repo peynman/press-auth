@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Larapress\Auth\Signin\SigninController;
-use Larapress\Auth\Signup\SignupEmailController;
-use Larapress\Auth\Signup\SignupSMSController;
-use Larapress\Auth\Signup\SignupSocialController;
+use Larapress\Auth\Services\Signin\SigninController;
+use Larapress\Auth\Services\Signup\Controllers\SignupEmailController;
+use Larapress\Auth\Services\Signup\Controllers\SignupSMSController;
+use Larapress\Auth\Services\Signup\Controllers\SignupSocialController;
 
 Route::middleware(config('larapress.crud.middlewares'))
     ->prefix(config('larapress.crud.prefix'))

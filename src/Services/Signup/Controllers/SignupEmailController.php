@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signup;
+namespace Larapress\Auth\Services\Signup\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;

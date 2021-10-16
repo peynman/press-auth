@@ -45,6 +45,13 @@ return [
         'student' => 1,
     ],
 
+    // signin - signup reports
+    'reports' => [
+        'group' => 'auth',
+        'signin' => 1,
+        'signup' => 2,
+    ],
+
     // signup settings
     'signup' => [
         // sms signup

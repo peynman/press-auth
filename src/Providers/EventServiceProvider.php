@@ -13,11 +13,11 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        'Larapress\Auth\Signin\SigninEvent' => [
-            'Larapress\Auth\Signin\SigninReport',
+        'Larapress\Auth\Services\Signin\SigninEvent' => [
+            'Larapress\Auth\Services\Signin\Reports\SigninListener',
         ],
-        'Larapress\Auth\Signup\SignupEvent' => [
-            'Larapress\Auth\Signup\SignupReport',
+        'Larapress\Auth\Services\Signup\SignupEvent' => [
+            'Larapress\Auth\Services\Signup\Reports\SignupListener',
         ]
     ];
 

@@ -4,11 +4,10 @@ namespace Larapress\Auth\Providers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
-use Larapress\Auth\Signin\DomainSigninService;
-use Larapress\Auth\Signin\ISigninService;
-use Larapress\Profiles\Repository\Domain\IDomainRepository;
-use Larapress\Auth\Signup\DomainSignupService;
-use Larapress\Auth\Signup\ISignupService;
+use Larapress\Auth\Services\Signup\DomainSignupService;
+use Larapress\Auth\Services\Signup\ISignupService;
+use Larapress\Auth\Services\Signin\DomainSigninService;
+use Larapress\Auth\Services\Signin\ISigninService;
 
 class PackageServiceProvider extends ServiceProvider
 {
@@ -41,7 +40,9 @@ class PackageServiceProvider extends ServiceProvider
         ], ['config', 'larapress', 'larapress-auth']);
 
         Auth::provider('larapress', function () {
-            return new MasterIdentifierUserProvider(app(IDomainRepository::class));
+            return new MasterIdentifierUserProvider(
+                app(\Larapress\Profiles\Repository\Domain\IDomainRepository::class)
+            );
         });
     }
 }

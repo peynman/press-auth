@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Services\Signin;
 
 use Larapress\Profiles\IProfileUser;
 use Exception;

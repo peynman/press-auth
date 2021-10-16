@@ -1,18 +1,17 @@
 <?php
 
-namespace Larapress\Auth\Signup;
+namespace Larapress\Auth\Services\Signup\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Reset password request, this request is available after VerifyPhoneCheckRequest
+ * Validate Phone number with verification code sent
  *
- * @queryParam phone required the phone number (account) to reset password for
- * @queryParam password the new password
- * @queryParam msg_id the verification sms id which is received from VerifyPhoneCheckRequest end point
- *
+ * @queryParam email required_without:phone the email
+ * @queryParam phone required_without:email the phone number with/without country code
+ * @queryParam code required the code recieved by sms
  */
-class ResetPasswordRequest extends FormRequest
+class VerifyCheckRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -35,11 +34,9 @@ class ResetPasswordRequest extends FormRequest
         return [
             'email' => 'required_without:phone|email',
             'phone' => 'required_without:email|numeric|regex:/(09)[0-9]{9}/',
-            'password' => 'string|min:6|confirmed|required',
-            'msgId' => 'required|numeric|exists:sms_messages,id',
+            'code' => 'required',
         ];
     }
-
 
     /**
      * Undocumented function
@@ -58,7 +55,7 @@ class ResetPasswordRequest extends FormRequest
      */
     public function getEmail()
     {
-        return $this->get('email');
+        return $this->Get('email');
     }
 
     /**
@@ -66,18 +63,8 @@ class ResetPasswordRequest extends FormRequest
      *
      * @return String
      */
-    public function getPassword()
+    public function getCode()
     {
-        return $this->get('password');
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @return String
-     */
-    public function getMessageID()
-    {
-        return $this->get('msgId');
+        return $this->get('code');
     }
 }

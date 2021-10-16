@@ -1,6 +1,6 @@
 <?php
 
-namespace Larapress\Auth\Signin;
+namespace Larapress\Auth\Services\Signin\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Larapress\CRUD\Exceptions\ValidationException;

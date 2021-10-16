@@ -1,13 +1,13 @@
 <?php
 
 
-namespace Larapress\Auth\Signup;
+namespace Larapress\Auth\Services\Signup;
 
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Larapress\Auth\Services\Signup\Requests\SignupRequest;
 use Larapress\Auth\Signin\ISigninService;
 use Larapress\CRUD\BaseFlags;
 use Larapress\CRUD\Events\CRUDCreated;
@@ -19,7 +19,6 @@ use Larapress\CRUD\Models\Role;
 use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
 use Larapress\Notifications\Models\SMSGatewayData;
 use Larapress\Notifications\Models\SMSMessage;
-use Larapress\Notifications\Services\SMSService\Jobs\SendSMS;
 use Larapress\Profiles\CRUD\PhoneNumberCRUDProvider;
 use Larapress\Profiles\CRUD\UserCRUDProvider;
 use Larapress\Profiles\Flags\UserDomainFlags;
@@ -278,7 +277,7 @@ class DomainSignupService implements ISignupService
             CRUDCreated::dispatch(null, $dbPhone, PhoneNumberCRUDProvider::class, $now);
         }
         CRUDCreated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, $now);
-        SendSMS::dispatch($smsMessage);
+        // SendSMS::dispatch($smsMessage);
 
         return [
             'message' => trans('larapress::auth.signup.messages.code_sent'),
