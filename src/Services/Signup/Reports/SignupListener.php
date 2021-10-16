@@ -3,7 +3,7 @@
 namespace Larapress\Auth\Services\Signup\Reports;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Larapress\Auth\Signup\SignupEvent;
+use Larapress\Auth\Services\Signup\SignupEvent;
 use Larapress\Reports\Services\Reports\IMetricsService;
 
 class SignupListener implements ShouldQueue

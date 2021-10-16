@@ -37,7 +37,7 @@ class DomainSigninService implements ISigninService
     }
 
     /**
-     * @param \Larapress\Auth\Signin\SigninRequest $request
+     * @param SigninRequest $request
      *
      * @return array
      *
