@@ -4,6 +4,11 @@ namespace Larapress\Auth\Services\Signup\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
+use Larapress\Auth\Services\Signup\ISignupService;
+use Larapress\Auth\Services\Signup\Requests\ResetPasswordRequest;
+use Larapress\Auth\Services\Signup\Requests\SignupRequest;
+use Larapress\Auth\Services\Signup\Requests\VerifyCheckRequest;
+use Larapress\Auth\Services\Signup\Requests\VerifyRequest;
 use Larapress\Profiles\Repository\Domain\IDomainRepository;
 
 /**

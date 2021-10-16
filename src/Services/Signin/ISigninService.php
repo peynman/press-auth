@@ -2,8 +2,8 @@
 
 namespace Larapress\Auth\Services\Signin;
 
-use Larapress\Profiles\IProfileUser;
 use Exception;
+use Larapress\Auth\Services\Signin\Requests\SigninRequest;
 
 interface ISigninService
 {

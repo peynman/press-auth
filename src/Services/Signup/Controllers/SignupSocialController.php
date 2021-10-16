@@ -4,6 +4,7 @@ namespace Larapress\Auth\Services\Signup\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
+use Larapress\Auth\Services\Signup\ISignupService;
 
 /**
  * Signup users with social login (github/facebook/...)

@@ -5,6 +5,7 @@ namespace Larapress\Auth\Services\Signin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
+use Larapress\Auth\Services\Signin\Requests\SigninRequest;
 
 /**
  * Sign in users based on their registration domain.
