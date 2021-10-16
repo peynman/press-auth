@@ -8,7 +8,7 @@ use Larapress\Reports\Services\Reports\IMetricsService;
 use Larapress\Reports\Services\Reports\MetricsSourceHelper;
 use Larapress\Reports\Services\Reports\ReportQueryRequest;
 
-class SigninWindowedReport implements ICRUDReportSource
+class SigninReport implements ICRUDReportSource
 {
     use MetricsSourceHelper;
 

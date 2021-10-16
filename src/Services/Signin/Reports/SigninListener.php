@@ -6,7 +6,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Larapress\Auth\Signin\SigninEvent;
 use Larapress\Reports\Services\Reports\IMetricsService;
 
-class SigninSendReport implements ShouldQueue
+class SigninListener implements ShouldQueue
 {
     const KEY = 'auth.signin';
 
