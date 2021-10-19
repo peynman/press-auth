@@ -8,8 +8,6 @@ use Larapress\Reports\Services\Reports\IMetricsService;
 
 class SignupListener implements ShouldQueue
 {
-    const KEY = 'auth.signup';
-
     public function __construct(public IMetricsService $metrics)
     {
     }
@@ -31,7 +29,7 @@ class SignupListener implements ShouldQueue
                 $event->getUser()->getMembershipGroupIds(),
                 config('larapress.auth.reports.signup'),
                 config('larapress.auth.reports.group'),
-                self::KEY,
+                'signup',
                 1,
                 null,
                 $event->timestamp

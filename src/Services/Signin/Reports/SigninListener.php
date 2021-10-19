@@ -8,8 +8,6 @@ use Larapress\Reports\Services\Reports\IMetricsService;
 
 class SigninListener implements ShouldQueue
 {
-    const KEY = 'auth.signin';
-
     public function __construct(public IMetricsService $metrics)
     {
     }
@@ -31,7 +29,7 @@ class SigninListener implements ShouldQueue
                 $event->getUser()->getMembershipGroupIds(),
                 config('larapress.auth.reports.signin'),
                 config('larapress.auth.reports.group'),
-                self::KEY,
+                'signin',
                 1,
                 null,
                 $event->timestamp
