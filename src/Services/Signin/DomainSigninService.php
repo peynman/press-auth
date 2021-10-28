@@ -110,7 +110,7 @@ class DomainSigninService implements ISigninService
             ]
         ]);
         CRUDCreated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, $now);
-        // SendSMS::dispatch($smsMessage);
+        SendSMS::dispatch($smsMessage);
 
         return [
             'message' => trans('larapress::auth.signup.messages.code_sent'),
