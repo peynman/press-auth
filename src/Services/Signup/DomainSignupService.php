@@ -173,7 +173,7 @@ class DomainSignupService implements ISignupService
             SignupEvent::dispatch($user, $domain, $request->getIntroducerID(), $request->ip(), $now);
         });
 
-        return $this->signinService->signinUser($domain, $dbPhone->number, $password);
+        return $this->signinService->signinCredentials($domain, $dbPhone->number, $password);
     }
 
     /**
@@ -216,7 +216,7 @@ class DomainSignupService implements ISignupService
             'password' => Hash::make($password)
         ]);
 
-        return $this->signinService->signinUser($domain, $dbPhone->user->name, $password);
+        return $this->signinService->signinCredentials($domain, $dbPhone->user->name, $password);
     }
 
     /**
