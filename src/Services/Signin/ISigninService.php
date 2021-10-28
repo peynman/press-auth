@@ -4,6 +4,7 @@ namespace Larapress\Auth\Services\Signin;
 
 use Exception;
 use Larapress\Auth\Services\Signin\Requests\SigninRequest;
+use Larapress\Profiles\IProfileUser;
 
 interface ISigninService
 {
@@ -16,6 +17,13 @@ interface ISigninService
      */
     public function signin(SigninRequest $request);
 
+    /**
+     * Undocumented function
+     *
+     * @param IProfileUser $user
+     * @return array
+     */
+    public function signinUser(IProfileUser $user);
 
     /**
      * Undocumented function
@@ -28,7 +36,25 @@ interface ISigninService
      *
      * @throws Exception
      */
-    public function signinUser($domain, string $username, string $password);
+    public function signinCredentials($domain, string $username, string $password);
+
+
+    /**
+     * Undocumented function
+     *
+     * @param string $phone
+     * @param string $code
+     * @return array
+     */
+    public function signinWithOTC($phone, $code);
+
+    /**
+     * Undocumented function
+     *
+     * @param string $phone
+     * @return array
+     */
+    public function sendSigninOTC($phone);
 
     /**
      * @return array

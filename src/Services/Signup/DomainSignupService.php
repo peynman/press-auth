@@ -19,6 +19,7 @@ use Larapress\CRUD\Models\Role;
 use Larapress\Notifications\CRUD\SMSMessageCRUDProvider;
 use Larapress\Notifications\Models\SMSGatewayData;
 use Larapress\Notifications\Models\SMSMessage;
+use Larapress\Notifications\Services\SMSService\Jobs\SendSMS;
 use Larapress\Profiles\CRUD\PhoneNumberCRUDProvider;
 use Larapress\Profiles\CRUD\UserCRUDProvider;
 use Larapress\Profiles\Flags\UserDomainFlags;
@@ -85,11 +86,15 @@ class DomainSignupService implements ISignupService
         if (!is_null($request->get('campaign_id', null))) {
             $formId = $request->get('campaign_id');
             $formService->updateFormEntry(
-                $request,
                 $user,
-                $formId
+                $user->getMembershipDomainId(),
+                $formId,
+                $request->getClientIp(),
+                $request->userAgent(),
+                $request->all(),
             );
         }
+
         if (!is_null(config('larapress.auth.signup.autofill_form'))) {
             $formId = config('larapress.auth.signup.autofill_form');
             $form = Form::find($formId);
@@ -98,9 +103,12 @@ class DomainSignupService implements ISignupService
                 $formRequest = clone $request;
                 $formRequest->merge($values);
                 $formService->updateFormEntry(
-                    $formRequest,
                     $user,
-                    $formId
+                    $user->getMembershipDomainId(),
+                    $formId,
+                    $request->getClientIp(),
+                    $request->userAgent(),
+                    $request->all(),
                 );
             }
         }
@@ -208,17 +216,6 @@ class DomainSignupService implements ISignupService
             'password' => Hash::make($password)
         ]);
 
-        if (!is_null($request->get('campaign_id', null))) {
-            $formId = $request->get('campaign_id');
-            /** @var IFormEntryService */
-            $formService = app(IFormEntryService::class);
-            $formService->updateFormEntry(
-                $request,
-                $dbPhone->user,
-                $formId
-            );
-        }
-
         return $this->signinService->signinUser($domain, $dbPhone->user->name, $password);
     }
 
@@ -277,7 +274,7 @@ class DomainSignupService implements ISignupService
             CRUDCreated::dispatch(null, $dbPhone, PhoneNumberCRUDProvider::class, $now);
         }
         CRUDCreated::dispatch(null, $smsMessage, SMSMessageCRUDProvider::class, $now);
-        // SendSMS::dispatch($smsMessage);
+        SendSMS::dispatch($smsMessage);
 
         return [
             'message' => trans('larapress::auth.signup.messages.code_sent'),
