@@ -2,8 +2,8 @@
 
 namespace Larapress\Auth\Compositions;
 
-use Larapress\Auth\Signin\Reports\SigninWindowedReport;
-use Larapress\Auth\Signup\Reports\SignupWindowedReport;
+use Larapress\Auth\Services\Signin\Reports\SigninReport;
+use Larapress\Auth\Services\Signup\Reports\SignupReport;
 use Larapress\CRUD\Services\CRUD\CRUDProviderComposition;
 
 class UserAuthComposition extends CRUDProviderComposition
@@ -16,8 +16,8 @@ class UserAuthComposition extends CRUDProviderComposition
     public function getReportSources(): array
     {
         return array_merge($this->sourceProvider->getReportSources(), [
-            SigninWindowedReport::NAME => SigninWindowedReport::class,
-            SignupWindowedReport::NAME => SignupWindowedReport::class,
+            SigninReport::NAME => SigninReport::class,
+            SignupReport::NAME => SignupReport::class,
         ]);
     }
 }

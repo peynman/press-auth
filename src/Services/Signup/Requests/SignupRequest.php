@@ -17,6 +17,11 @@ use Larapress\Profiles\Services\FormEntry\IFormEntryService;
  */
 class SignupRequest extends FormRequest
 {
+    /** @var Form */
+    protected $form;
+
+    /** @var Form */
+    protected $campaignForm;
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -38,13 +43,35 @@ class SignupRequest extends FormRequest
         $formValidations = [];
         if (!is_null(config('larapress.auth.signup.autofill_form'))) {
             $formId = config('larapress.auth.signup.autofill_form');
-            $form = Form::find($formId);
-            if (!is_null($form)) {
+            if (is_numeric($formId)) {
+                $this->form = Form::find($formId);
+            } else {
+                $this->form = Form::query()->where('name', $formId)->first();
+            }
+            if (!is_null($this->form)) {
                 /** @var IFormEntryService */
                 $formService = app(IFormEntryService::class);
-                [$rules, $inputs] = $formService->getFormValidationRules($form);
+                $rules = $formService->getFormValidationRules($this->form);
                 foreach ($rules as $ruleName => $rule) {
-                    $formValidations[$form->name.'.'.$ruleName] = $rule;
+                    $formValidations[$this->form->name . '.' . $ruleName] = $rule;
+                }
+            }
+        }
+
+        $campaignId = $this->get('campaignId');
+        if (!is_null($campaignId)) {
+            if (is_numeric($campaignId)) {
+                $this->campaignForm = Form::find($campaignId);
+            } else {
+                $this->campaignForm = Form::query()->where('name', $campaignId)->first();
+            }
+
+            if (!is_null($this->campaignForm)) {
+                /** @var IFormEntryService */
+                $formService = app(IFormEntryService::class);
+                $rules = $formService->getFormValidationRules($this->campaignForm);
+                foreach ($rules as $ruleName => $rule) {
+                    $formValidations[$this->campaignForm->name . '.' . $ruleName] = $rule;
                 }
             }
         }
@@ -60,7 +87,7 @@ class SignupRequest extends FormRequest
         ], $formValidations);
 
         if (!is_null(config('larapress.auth.signup.sms.phone_digits'))) {
-            $rules['phone'] .= '|digits:'.config('larapress.auth.signup.sms.phone_digits');
+            $rules['phone'] .= '|digits:' . config('larapress.auth.signup.sms.phone_digits');
         }
 
         return $rules;
@@ -124,5 +151,53 @@ class SignupRequest extends FormRequest
     public function getIntroducerID()
     {
         return $this->get('introducerId');
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return array
+     */
+    public function getFormData()
+    {
+        if (!is_null($this->getForm())) {
+            return $this->get($this->getForm()->name, []);
+        }
+
+        return [];
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return Form|null
+     */
+    public function getForm()
+    {
+        return $this->form;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return Form|null
+     */
+    public function getCampaignForm()
+    {
+        return $this->campaignForm;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return array
+     */
+    public function getCampaignFormData()
+    {
+        if (!$this->getCampaignForm()) {
+            return $this->get($this->getCampaignForm()->name, []);
+        }
+
+        return [];
     }
 }

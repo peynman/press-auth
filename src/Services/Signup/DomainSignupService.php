@@ -83,32 +83,26 @@ class DomainSignupService implements ISignupService
     {
         /** @var IFormEntryService */
         $formService = app(IFormEntryService::class);
-        if (!is_null($request->get('campaign_id', null))) {
-            $formId = $request->get('campaign_id');
+        if (!is_null($request->getCampaignForm())) {
             $formService->updateFormEntry(
                 $user,
                 $user->getMembershipDomainId(),
-                $formId,
+                $request->getCampaignForm(),
                 $request->getClientIp(),
                 $request->userAgent(),
-                $request->all(),
+                $request->getCampaignFormData(),
             );
         }
 
         if (!is_null(config('larapress.auth.signup.autofill_form'))) {
-            $formId = config('larapress.auth.signup.autofill_form');
-            $form = Form::find($formId);
-            if (!is_null($form)) {
-                $values = $request->get($form->name);
-                $formRequest = clone $request;
-                $formRequest->merge($values);
+            if (!is_null($request->getForm())) {
                 $formService->updateFormEntry(
                     $user,
                     $user->getMembershipDomainId(),
-                    $formId,
+                    $request->getForm(),
                     $request->getClientIp(),
                     $request->userAgent(),
-                    $request->all(),
+                    $request->getFormData(),
                 );
             }
         }
