@@ -128,11 +128,11 @@ class DomainSigninService implements ISigninService
     {
         $domain = $this->domainRepository->getCurrentRequestDomain();
         /** @var PhoneNumber */
-        $dbPhone = PhoneNumber::where('number', $phone)
+        $dbPhone = PhoneNumber::with('user')->where('number', $phone)
             ->where('domain_id', $domain->id)
             ->first();
 
-        if (is_null($dbPhone)) {
+        if (is_null($dbPhone) || is_null($dbPhone->user)) {
             throw new RequestException(trans('larapress::auth.signin.otc_not_found'));
         }
 
@@ -220,7 +220,7 @@ class DomainSigninService implements ISigninService
             $domain,
             $request->ip(),
             $request->userAgent(),
-            $request->get('client', 'web'),
+            $request->header(config('larapress.profiles.security.device_client_header'), 'web'),
             Carbon::now()
         );
 
@@ -280,7 +280,7 @@ class DomainSigninService implements ISigninService
             $user->getMembershipDomainId(),
             $request->ip(),
             $request->userAgent(),
-            $request->get('client', 'web'),
+            $request->header(config('larapress.profiles.security.device_client_header'), 'web'),
             Carbon::now()
         );
 
